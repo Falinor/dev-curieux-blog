@@ -1,0 +1,14 @@
+{
+  "name": "dev-curieux-blog",
+  "type": "module",
+  "private": true,
+  "packageManager": "pnpm@12.14.0",
+  "engines": {
+    "node": ">=24"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "21.2.4",
+    "@commitlint/config-conventional": "21.2.4",
+    "lefthook": "2.2.2"
+  }
+}
