@@ -1,6 +1,6 @@
 # Dev curieux blog — Design brief
 
-**Status: brief, before prototypes.** This is the input to the `/prototype` round, not a locked design. The landing page's design system (`Falinor/curieux-dev`, `DESIGN.md`, « L'heure dorée ») is the parent: the blog is a calmer, reading-first branch of the same world.
+**Status: direction locked → « Cartes postales ».** Chosen from three prototyped directions; see [Decisions from the prototype](#decisions-from-the-prototype). The landing page's design system (`Falinor/curieux-dev`, `DESIGN.md`, « L'heure dorée ») is the parent: the blog is a reading-friendly branch of the same world.
 
 ---
 
@@ -29,17 +29,22 @@ Two pillars, and every design choice should serve both:
 Reading comes first. The scene is atmosphere at the edges, never behind the text.
 
 - **Measure:** 60–75 characters per line; body 18–20px; generous line height.
-- **Hierarchy:** clear H2/H3 rhythm for skimmable technical posts; a visible table of contents on long Posts is an option to prototype.
+- **Hierarchy:** clear H2/H3 rhythm for skimmable technical posts. No table of contents in v1; add one if long Posts need it.
 - **Code:** a syntax theme drawn from the brand palette; long lines scroll, never wrap mid-token; copy button.
-- **Product angle:** room for a short "why it matters" framing near the top of a Post (prototype whether it is a component or just a writing habit).
+- **Product angle:** a way of writing, not a template feature. Posts often open on why something matters and close on what was learned, but there is no dedicated component or frontmatter field for it.
 - **Translation notice:** English pages say they are machine-translated from French and link to the original, visibly but without shouting.
 - **Social image:** generated per Post (title on brand colors), consistent with the chosen direction.
 
-## Open questions for the prototypes
+## Decisions from the prototype
 
-- **Themes.** The landing page commits to a single world with no light/dark toggle. A blog is read for long stretches, often at night: prototype a light « plein soleil » theme and a dark « crépuscule » theme, and decide whether the blog breaks from the landing page's single-world rule.
-- **How much scene.** From a thin horizon band in the header to a full sunset hero on the home page only.
-- **Home page.** A plain list of Posts versus cards; how Tags appear.
+Three directions were prototyped (A « Carnet de bord », B « Cartes postales », C « Atelier »), each with home page, Post page and social image, in both themes and both languages. **B « Cartes postales » won on every page.** The prototype is the primary source: `prototype/blog-design/index.html` on the `claude/epic-pascal-mhqjc2` branch (open with `#b-accueil-fr-crepuscule`).
+
+- **Direction.** Tactile, playful, closest to the landing page: a sunset scene with drifting waves at the top, a tilted « Dev curieux » badge, Posts as tilted postcards (ink outline, hard offset shadow) with the first Tag as a stamp, on a sea-colored background.
+- **Home page.** Scene hero, then the Posts as postcards, **at most two per row**. The top slot holds the **Pinned Posts**, newest first; with no Pinned Post, it holds the most recent Post. The other Posts follow, newest first.
+- **Post page.** A title postcard overlapping the horizon, then the Post on a cream sheet with ink outline and hard shadow; code blocks and quotes are tactile cards too.
+- **Themes.** Both: « crépuscule » (dark) and « plein soleil » (light), following the reader's system setting, with a toggle. This deliberately breaks the landing page's single-world rule. **The dark theme is the reference**; the light theme needs another design pass before launch.
+- **Social image.** The postcard: Post title on a tilted card over the sunset, Tag stamp, `blog.curieux.dev`.
+- **Not kept.** The sidebar, timeline and Problem → Built → Learned triad from C; the product framing stays a writing habit (see above).
 
 ## Hard requirements
 

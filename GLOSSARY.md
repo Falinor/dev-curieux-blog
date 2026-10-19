@@ -10,6 +10,10 @@ The blog of Dev curieux: a French developer writing about dev things, learning i
 A piece of writing published on the blog, authored in French.
 _Avoid_: Article, billet, entry
 
+**Pinned Post**:
+A Post the author marks to stay at the top of the home page, ahead of newer Posts.
+_Avoid_: Featured post, sticky post, highlighted post
+
 **Draft**:
 A Post that exists in the repo but is not yet visible to readers.
 _Avoid_: Unpublished post, WIP
