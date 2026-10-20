@@ -19,10 +19,45 @@ Two pillars, and every design choice should serve both:
 
 ## What carries over from the landing page
 
-- Color tokens: `ink`, `cream`, `coral`, `sun`, the ocean blues, and the day / gold / dusk skies.
+- The palette (`ink`, `cream`, `coral`, `sun`, the ocean blues, the day / gold / dusk skies), extended into the [color tokens](#color-tokens) below.
 - Typefaces: Bricolage Grotesque (display), Geist (body), Geist Mono (code, tags, stamps).
 - The tactile primitive (ink outline + hard offset shadow), used sparingly: cards, tags, buttons. Never on running text.
 - The legal-page precedent: brand frame kept, scene calmed for long-form legibility.
+
+## Color tokens
+
+The single source of truth for colors. Light values extend the landing page's palette and are prototype quality until the light-theme design pass; dark values are the reference design.
+
+| Token | « plein soleil » (light) | « crépuscule » (dark) | Role |
+|---|---|---|---|
+| `paper` | `#FFFBF4` | `#17112E` | Page background |
+| `card` | `#FFF6E6` | `#2A2052` | Postcards, sheet, title card |
+| `ink` | `#1C140C` | `#FFEFDC` | Text |
+| `muted` | `#6B5A48` | `#C4B2D6` | Secondary text, postmarks |
+| `edge` | `#1C140C` | `#06030D` | Tactile outline and hard offset shadow |
+| `rule` | `#EADCC6` | `#3A2E66` | Hairlines, inline code background |
+| `coral` | `#FF6A45` | `#FF7A55` | Warm accent fills (buttons) |
+| `coral-text` | `#B83A1B` | `#FFA384` | Accent text on `paper` / `card` |
+| `sun` | `#FFC63D` | `#FFC63D` | Sun, stamps, chips, highlights |
+| `on-sun` | `#1C140C` | `#1C140C` | Text on `sun` and `coral` |
+| `link` | `#1F5182` | `#9FD4FF` | Links |
+| `sky-top` | `#8FCBFF` | `#241A4B` | Scene sky, top |
+| `sky-bot` | `#EAF6FF` | `#6A3A6E` | Scene sky, bottom |
+| `sky-glow` | `#FFE1A8` | `#E0654F` | Glow at the horizon |
+| `sea-1` | `#1F5182` | `#0B2440` | Deepest sea, page background below the scene |
+| `sea-2` | `#2E6FA8` | `#123457` | Front wave, sea background |
+| `sea-3` | `#5A93C2` | `#1D4A75` | Middle wave |
+| `sea-4` | `#7FB0D6` | `#2B5F8F` | Back wave |
+| `sea-text` | `#FFF6E6` | `#FFEFDC` | Text on the sea |
+| `star` | transparent | `#FFF6E6` | Stars (dark only) |
+| `code-bg` | `#0E2F4D` | `#0D0922` | Code block background |
+| `code-fg` | `#EAF6FF` | `#F4E8FF` | Code text |
+| `tk-kw` | `#FF9A7A` | `#FF9A7A` | Keywords |
+| `tk-str` | `#FFD27A` | `#FFD27A` | Strings |
+| `tk-fn` | `#9FD4FF` | `#9FD4FF` | Functions, keys |
+| `tk-com` | `#93B2CF` | `#9D8FBF` | Comments (italic) |
+
+Tactile primitive: `border: 3px solid edge` plus `box-shadow: 6px 6px 0 edge` (8px for the sheet and title card, 4px for chips and stickers). Postcards tilt between -1.2° and +0.9° and straighten on hover.
 
 ## What changes for a blog
 
