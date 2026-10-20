@@ -1,3 +1,8 @@
+# Print only command output and failures, not the banner and summary.
+output:
+  - execution_out
+  - failure
+
 commit-msg:
   commands:
     commitlint:
