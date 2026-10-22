@@ -54,4 +54,23 @@ const posts = defineCollection({
   }),
 });
 
-export const collections = { posts, tags };
+// A Translation: the English title, description and body of the Post with the
+// same slug (`<slug>.en.mdx` next to `<slug>.mdx`, so the body's relative images
+// still resolve), written by the Translation module (`src/translation/`, ADR
+// 0002). Its id is the Post's slug. `sourceHash` is the fingerprint of the Post
+// it was translated from. Everything else (dates, Tags, `draft`, `pinned`) is
+// read from the Post.
+const translations = defineCollection({
+  loader: glob({
+    pattern: '*.en.mdx',
+    base: `${contentDir}/posts`,
+    generateId: ({ entry }) => entry.replace(/\.en\.mdx$/, ''),
+  }),
+  schema: z.strictObject({
+    title: z.string(),
+    description: z.string(),
+    sourceHash: z.string(),
+  }),
+});
+
+export const collections = { posts, tags, translations };

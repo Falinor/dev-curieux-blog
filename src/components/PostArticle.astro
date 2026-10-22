@@ -22,11 +22,11 @@ const email = 'contact@curieux.dev';
   <header class="title-card">
     <p class="meta">
       <span>
-        Publié le <time datetime={isoDate(publishedAt)}>{formatDate(publishedAt)}</time>
+        Publié le <time datetime={isoDate(publishedAt)}>{formatDate(publishedAt, 'fr')}</time>
       </span>
       {updatedAt && (
         <span>
-          Mis à jour le <time datetime={isoDate(updatedAt)}>{formatDate(updatedAt)}</time>
+          Mis à jour le <time datetime={isoDate(updatedAt)}>{formatDate(updatedAt, 'fr')}</time>
         </span>
       )}
       <span>{readingMinutes(post.body)} min de lecture</span>

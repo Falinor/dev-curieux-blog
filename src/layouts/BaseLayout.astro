@@ -3,6 +3,7 @@ import { Font } from 'astro:assets';
 import Analytics from '../components/Analytics.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 import SiteHeader from '../components/SiteHeader.astro';
+import { pageLocale } from '../lib/i18n';
 import '../styles/global.css';
 
 interface Props {
@@ -10,10 +11,11 @@ interface Props {
 }
 
 const { title } = Astro.props;
+const locale = pageLocale(Astro.currentLocale);
 ---
 
 <!doctype html>
-<html lang="fr">
+<html lang={locale}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />

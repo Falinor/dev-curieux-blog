@@ -1,7 +1,21 @@
 import { getCollection, getEntries, type CollectionEntry } from 'astro:content';
+import type { Locale } from './i18n';
 
 export type Post = CollectionEntry<'posts'>;
 export type Tag = CollectionEntry<'tags'>;
+export type Translation = CollectionEntry<'translations'>;
+
+/**
+ * A Post as the pages of one language show it. Its title, description and
+ * body come from `text`: the Post itself in French, its Translation in English.
+ * Dates, Tags, `draft` and `pinned` always come from `post`.
+ */
+export interface PostView {
+  locale: Locale;
+  post: Post;
+  /** The entry readers read: pass it to `render()` for the body. */
+  text: Post | Translation;
+}
 
 /** Every Post readers may see, newest first. Drafts are left out. */
 export async function getPublishedPosts(): Promise<Post[]> {
@@ -10,14 +24,31 @@ export async function getPublishedPosts(): Promise<Post[]> {
 }
 
 /**
- * How the home page lays out Posts (already newest first, as
- * `getPublishedPosts()` returns them): the Pinned Posts are featured at the top,
- * or the most recent Post when nothing is pinned; the others follow.
+ * The Posts the pages of a language show, newest first: every published Post
+ * in French; in English, only those with a Translation. An English page never
+ * falls back to French content.
  */
-export function homeLayout(posts: Post[]): { featured: Post[]; others: Post[] } {
-  const pinned = posts.filter((post) => post.data.pinned);
-  const featured = pinned.length > 0 ? pinned : posts.slice(0, 1);
-  return { featured, others: posts.filter((post) => !featured.includes(post)) };
+export async function getPostsIn(locale: Locale): Promise<PostView[]> {
+  const posts = await getPublishedPosts();
+  if (locale === 'fr') return posts.map((post) => ({ locale, post, text: post }));
+  const translations = new Map(
+    (await getCollection('translations')).map((translation) => [translation.id, translation]),
+  );
+  return posts.flatMap((post) => {
+    const translation = translations.get(post.id);
+    return translation ? [{ locale, post, text: translation }] : [];
+  });
+}
+
+/**
+ * How a home page lays out Posts (already newest first, as `getPostsIn()`
+ * returns them): the Pinned Posts are featured at the top, or the most recent
+ * Post when nothing is pinned; the others follow.
+ */
+export function homeLayout(views: PostView[]): { featured: PostView[]; others: PostView[] } {
+  const pinned = views.filter(({ post }) => post.data.pinned);
+  const featured = pinned.length > 0 ? pinned : views.slice(0, 1);
+  return { featured, others: views.filter((view) => !featured.includes(view)) };
 }
 
 /** The Post's Tags in frontmatter order: the first one is the Post's stamp. */
