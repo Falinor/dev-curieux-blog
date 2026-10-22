@@ -5,6 +5,7 @@ import { join } from 'node:path';
 import { test, type TestContext } from 'node:test';
 import { translationStatus } from './translation.ts';
 
+// A French Post and the SHA-256 of its exact bytes (computed with `sha256sum`).
 const PREMIER_POST = `---
 title: Premier post
 description: Mon premier post.
@@ -13,6 +14,17 @@ tags: [astro]
 ---
 
 Bonjour le monde.
+`;
+const PREMIER_POST_SHA256 = 'be38f3f756bcd1111b1f2eba5e440e2118052dbbb670928d6a6804daeb63d48f';
+
+// A Translation generated from the Post whose SHA-256 is `sourceHash`.
+const translation = (sourceHash: string) => `---
+title: First post
+description: My first post.
+sourceHash: ${sourceHash}
+---
+
+Hello world.
 `;
 
 // A content root (same layout as `BLOG_CONTENT_DIR`) holding the given files
@@ -35,5 +47,19 @@ test('status reports a Post without a Translation as missing', async (t) => {
   assert.deepEqual(
     statuses.map(({ slug, status }) => ({ slug, status })),
     [{ slug: 'premier-post', status: 'missing' }],
+  );
+});
+
+test('status reports a Translation generated from the current Post as fresh', async (t) => {
+  const root = await contentRoot(t, {
+    'premier-post.mdx': PREMIER_POST,
+    'premier-post.en.mdx': translation(PREMIER_POST_SHA256),
+  });
+
+  const statuses = await translationStatus(root);
+
+  assert.deepEqual(
+    statuses.map(({ slug, status }) => ({ slug, status })),
+    [{ slug: 'premier-post', status: 'fresh' }],
   );
 });
