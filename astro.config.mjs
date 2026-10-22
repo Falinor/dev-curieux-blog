@@ -1,5 +1,6 @@
 import { defineConfig, fontProviders } from 'astro/config';
 import mdx from '@astrojs/mdx';
+import { codeTheme } from './src/styles/code-theme.ts';
 
 /**
  * A self-hosted variable font from its Fontsource package: the Latin subset
@@ -20,6 +21,7 @@ function fontsource(name, cssVariable, file, weight, fallback) {
 export default defineConfig({
   site: 'https://blog.curieux.dev',
   integrations: [mdx()],
+  markdown: { shikiConfig: { theme: codeTheme } },
   fonts: [
     fontsource(
       'Bricolage Grotesque',

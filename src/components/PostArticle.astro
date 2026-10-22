@@ -132,6 +132,26 @@ const tags = await getPostTags(post);
     font-size: 0.86em;
   }
 
+  /*
+   * Code blocks are cards. Their colors come from the highlighting theme; a long
+   * line scrolls inside the card, never wraps and never widens the page.
+   */
+  .sheet :global(pre) {
+    max-width: 100%;
+    padding: 18px 20px;
+    border: var(--outline);
+    box-shadow: var(--shadow);
+    font-family: var(--font-mono);
+    font-size: 0.875rem;
+    line-height: 1.6;
+    tab-size: 2;
+  }
+  .sheet :global(pre code) {
+    padding: 0;
+    background: none;
+    font-size: inherit;
+  }
+
   /* Quotes are postcards: a tilted sun card. */
   .sheet :global(blockquote) {
     margin-inline: 0;

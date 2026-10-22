@@ -11,6 +11,12 @@ const dusk = {
   rule: 'rgb(58, 46, 102)',
   sun: 'rgb(255, 198, 61)',
   onSun: 'rgb(28, 20, 12)',
+  codeBg: 'rgb(13, 9, 34)',
+  codeFg: 'rgb(244, 232, 255)',
+  keyword: 'rgb(255, 154, 122)',
+  string: 'rgb(255, 210, 122)',
+  function: 'rgb(159, 212, 255)',
+  comment: 'rgb(157, 143, 191)',
 };
 const outline = `3px solid ${dusk.edge}`;
 const shadow = (offset: number) => `${dusk.edge} ${offset}px ${offset}px 0px 0px`;
@@ -87,6 +93,37 @@ test('a Post body sits on a sheet, with display headings, a quote card and inlin
   const inlineCode = article.getByText('pre-commit', { exact: true });
   await expect(inlineCode).toHaveCSS('font-family', /Geist Mono/);
   await expect(inlineCode).toHaveCSS('background-color', dusk.rule);
+});
+
+test('a code block is a card highlighted in the brand colors, and a long line scrolls instead of wrapping', async ({
+  page,
+}) => {
+  await page.goto('/troisieme-post/');
+  const code = page.getByRole('article').locator('pre');
+
+  expect(await cardAround(code)).toMatchObject({
+    outline,
+    shadow: shadow(6),
+    background: dusk.codeBg,
+  });
+  await expect(code).toHaveCSS('color', dusk.codeFg);
+  await expect(code).toHaveCSS('font-family', /Geist Mono/);
+  const comment = code.getByText('// Une traduction est périmée', { exact: false });
+  await expect(comment).toHaveCSS('color', dusk.comment);
+  await expect(comment).toHaveCSS('font-style', 'italic');
+  await expect(code.getByText('export', { exact: true })).toHaveCSS('color', dusk.keyword);
+  await expect(code.getByText('isStale', { exact: true })).toHaveCSS('color', dusk.function);
+
+  const longLine = code.getByText('Une très longue ligne de code', { exact: false });
+  await expect(longLine).toHaveCSS('color', dusk.string);
+  expect(
+    await longLine.evaluate((span) => span.getClientRects().length),
+    'the long line stays on one line',
+  ).toBe(1);
+  expect(
+    await code.evaluate((pre) => pre.scrollWidth > pre.clientWidth),
+    'the code block scrolls sideways',
+  ).toBe(true);
 });
 
 test('a Post page without an update date shows no update line, and every Tag by its French label', async ({
