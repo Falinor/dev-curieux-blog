@@ -26,6 +26,8 @@ h1,
 h2,
 h3 {
   text-wrap: balance;
+  /* A word longer than the line (a long identifier) breaks rather than overflows. */
+  overflow-wrap: break-word;
 }
 
 a {
@@ -36,8 +38,8 @@ a {
 /*
  * Two tones in « plein soleil »: the halo fills the gap between an element and
  * its ring (it is transparent at dusk). An element with its own hard shadow
- * must repeat it after the halo on `:focus-visible`, or lose the halo: by
- * daylight the `ink` ring merges into an `edge` shadow.
+ * takes the matching `--focus-shadow*` token on `:focus-visible` instead, or
+ * loses the halo.
  */
 :focus-visible {
   outline: 3px solid var(--focus-ring);

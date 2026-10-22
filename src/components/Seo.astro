@@ -6,7 +6,9 @@ import {
   type Locale,
   otherLocale,
   pageLocale,
+  languageTags,
   socialImagePath,
+  socialImageSize,
   ui,
 } from '../lib/i18n';
 
@@ -15,8 +17,8 @@ import {
 // other-language version, the Open Graph and Twitter card tags of its preview,
 // and the RSS feed of its language.
 
-/** A Post page: the Post as link previews describe it. */
-export interface Article {
+/** A Post page: the Post as link previews and search engines describe it. */
+export interface PostMeta {
   /** The title of the Post (or of its Translation), without the site's name. */
   headline: string;
   publishedAt: Date;
@@ -36,7 +38,7 @@ export interface Props {
    * language's home page image.
    */
   image?: string | undefined;
-  article?: Article | undefined;
+  post?: PostMeta | undefined;
   /** Keep the page out of search engines (the 404 page): no canonical URL, no preview. */
   noindex?: boolean | undefined;
 }
@@ -47,7 +49,7 @@ const {
   description,
   alternates,
   image = socialImagePath(homePath(locale)),
-  article,
+  post,
   noindex = false,
 } = Astro.props;
 // Absolute on `site`, so they name blog.curieux.dev wherever the build is
@@ -55,29 +57,31 @@ const {
 const absolute = (path: string) => new URL(path, Astro.site).href;
 const canonical = absolute(Astro.url.pathname);
 const imageUrl = absolute(image);
+// Link previews name a Post by its own title, without the site's name.
+const previewTitle = post?.headline ?? title;
 // Both versions, with French, the original, as the default.
 const hreflangs = alternates
   ? Object.entries({ fr: alternates.fr, en: alternates.en, 'x-default': alternates.fr }).map(
       ([hreflang, path]) => ({ hreflang, href: absolute(path) }),
     )
   : [];
-// English as en-GB, like the dates.
-const ogLocales: Record<Locale, string> = { fr: 'fr_FR', en: 'en_GB' };
+// Open Graph writes `fr_FR` for `fr-FR`.
+const ogLocale = (of: Locale) => languageTags[of].replace('-', '_');
 const otherLocales = alternates ? [otherLocale(locale)] : [];
 // For search engines: a Post page is a BlogPosting, and a Translation says
 // which French Post it translates.
-const blogPosting = article && {
+const blogPosting = post && {
   '@context': 'https://schema.org',
   '@type': 'BlogPosting',
-  headline: article.headline,
+  headline: post.headline,
   description,
   inLanguage: locale,
-  datePublished: article.publishedAt.toISOString(),
-  dateModified: (article.updatedAt ?? article.publishedAt).toISOString(),
+  datePublished: post.publishedAt.toISOString(),
+  dateModified: (post.updatedAt ?? post.publishedAt).toISOString(),
   url: canonical,
   mainEntityOfPage: canonical,
   image: imageUrl,
-  keywords: article.tags,
+  keywords: post.tags,
   author: { '@type': 'Person', name: 'Dev curieux', url: 'https://curieux.dev' },
   ...(locale !== 'fr' && alternates && { translationOfWork: { '@id': absolute(alternates.fr) } }),
 };
@@ -97,32 +101,34 @@ const blogPosting = article && {
 />
 {!noindex && (
   <>
-    <meta property="og:type" content={article ? 'article' : 'website'} />
+    <meta property="og:type" content={post ? 'article' : 'website'} />
     <meta property="og:site_name" content="Dev curieux" />
-    <meta property="og:title" content={article?.headline ?? title} />
+    <meta property="og:title" content={previewTitle} />
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />
-    <meta property="og:locale" content={ogLocales[locale]} />
+    <meta property="og:locale" content={ogLocale(locale)} />
     {otherLocales.map((other) => (
-      <meta property="og:locale:alternate" content={ogLocales[other]} />
+      <meta property="og:locale:alternate" content={ogLocale(other)} />
     ))}
     <meta property="og:image" content={imageUrl} />
-    <meta property="og:image:width" content="1200" />
-    <meta property="og:image:height" content="630" />
+    <meta property="og:image:width" content={String(socialImageSize.width)} />
+    <meta property="og:image:height" content={String(socialImageSize.height)} />
     <meta property="og:image:type" content="image/png" />
-    <meta property="og:image:alt" content={article?.headline ?? title} />
-    {article && (
+    <meta property="og:image:alt" content={previewTitle} />
+    {post && (
       <>
-        <meta property="article:published_time" content={article.publishedAt.toISOString()} />
-        {article.updatedAt && (
-          <meta property="article:modified_time" content={article.updatedAt.toISOString()} />
+        <meta property="article:published_time" content={post.publishedAt.toISOString()} />
+        {post.updatedAt && (
+          <meta property="article:modified_time" content={post.updatedAt.toISOString()} />
         )}
-        {article.tags.map((tag) => (
+        {post.tags.map((tag) => (
           <meta property="article:tag" content={tag} />
         ))}
       </>
     )}
     <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={previewTitle} />
+    <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={imageUrl} />
     {blogPosting && (
       <script

@@ -5,17 +5,17 @@ import { glob, readFile, writeFile } from 'node:fs/promises';
 import { basename, dirname, join } from 'node:path';
 import { parse, stringify } from 'yaml';
 
-export type TranslationState = 'fresh' | 'stale' | 'missing';
+export type TranslationStatus = 'fresh' | 'stale' | 'missing';
 
-/** A non-Draft Post and the state of its Translation. */
+/** A non-Draft Post and the status of its Translation. */
 export interface PostTranslation {
   /** The Post's file name without `.mdx`. */
   slug: string;
   /** Path of the French Post file. */
-  post: string;
+  postPath: string;
   /** Path of its Translation file, `<slug>.en.mdx` next to the Post (may not exist yet). */
-  translation: string;
-  status: TranslationState;
+  translationPath: string;
+  status: TranslationStatus;
 }
 
 /** What a translator returns for a Post: its English title, description and MDX body. */
@@ -25,11 +25,16 @@ export interface English {
   body: string;
 }
 
+/** Why a translator could not translate a Post: Claude Code missing, not logged in, … */
+export interface Unavailable {
+  unavailable: string;
+}
+
 /**
  * The translator adapter: takes a French Post file's full contents and returns its
- * English, or `{ unavailable: reason }` when it cannot translate (never throws for that).
+ * English, or `Unavailable` when it cannot translate (never throws for that).
  */
-export type Translator = (frenchPost: string) => Promise<English | { unavailable: string }>;
+export type Translator = (frenchPost: string) => Promise<English | Unavailable>;
 
 /** What `translatePosts` did; each Post keeps the status it had before translating. */
 export interface TranslationReport {
@@ -43,14 +48,10 @@ export interface TranslationReport {
 
 const TRANSLATION_SUFFIX = '.en.mdx';
 
-/** Every non-Draft Post under `<contentDir>/posts/`, by slug, with its Translation's state. */
+/** Every non-Draft Post under `<contentDir>/posts/`, by slug, with its Translation's status. */
 export async function translationStatus(contentDir: string): Promise<PostTranslation[]> {
-  const statuses: PostTranslation[] = [];
-  for (const post of await postFiles(contentDir)) {
-    const entry = await postTranslation(post);
-    if (entry) statuses.push(entry);
-  }
-  return statuses;
+  const posts = await Promise.all((await postFiles(contentDir)).map(postTranslation));
+  return posts.filter((post) => post !== undefined);
 }
 
 /**
@@ -65,21 +66,21 @@ export async function translatePosts(
   from: { contentDir: string } | { posts: string[] },
 ): Promise<TranslationReport> {
   const report: TranslationReport = { translated: [], fresh: [], unavailable: [] };
-  const posts = 'posts' in from ? new Set(from.posts) : await postFiles(from.contentDir);
-  for (const post of posts) {
-    const target = await postTranslation(post);
+  const postPaths = 'posts' in from ? new Set(from.posts) : await postFiles(from.contentDir);
+  for (const postPath of postPaths) {
+    const target = await postTranslation(postPath);
     if (!target) continue;
     if (target.status === 'fresh') {
       report.fresh.push(target);
       continue;
     }
-    const source = await readFile(post);
+    const source = await readFile(postPath);
     const english = await translator(source.toString('utf8'));
     if ('unavailable' in english) {
       report.unavailable.push({ ...target, reason: english.unavailable });
       continue;
     }
-    await writeFile(target.translation, translationFile(english, fingerprint(source)));
+    await writeFile(target.translationPath, translationFile(english, fingerprint(source)));
     report.translated.push(target);
   }
   return report;
@@ -94,13 +95,13 @@ async function postFiles(contentDir: string): Promise<string[]> {
   return names.toSorted().map((name) => join(postsDir, name));
 }
 
-// A Post's Translation (`<slug>.en.mdx` next to it) and its state; undefined for a Draft.
-async function postTranslation(post: string): Promise<PostTranslation | undefined> {
-  const source = await readFile(post);
+// A Post's Translation (`<slug>.en.mdx` next to it) and its status; undefined for a Draft.
+async function postTranslation(postPath: string): Promise<PostTranslation | undefined> {
+  const source = await readFile(postPath);
   if (frontmatter(source.toString('utf8')).draft === true) return undefined;
-  const slug = basename(post, '.mdx');
-  const translation = join(dirname(post), `${slug}${TRANSLATION_SUFFIX}`);
-  return { slug, post, translation, status: await stateOf(source, translation) };
+  const slug = basename(postPath, '.mdx');
+  const translationPath = join(dirname(postPath), `${slug}${TRANSLATION_SUFFIX}`);
+  return { slug, postPath, translationPath, status: await statusOf(source, translationPath) };
 }
 
 // A Translation holds only the translated fields and its Post's fingerprint: dates,
@@ -110,8 +111,8 @@ function translationFile({ title, description, body }: English, sourceHash: stri
   return `---\n${fields}---\n\n${body.trim()}\n`;
 }
 
-async function stateOf(source: Buffer, translation: string): Promise<TranslationState> {
-  const translated = await readIfExists(translation);
+async function statusOf(source: Buffer, translationPath: string): Promise<TranslationStatus> {
+  const translated = await readIfExists(translationPath);
   if (translated === undefined) return 'missing';
   return frontmatter(translated).sourceHash === fingerprint(source) ? 'fresh' : 'stale';
 }

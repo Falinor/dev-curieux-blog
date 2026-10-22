@@ -5,7 +5,7 @@ import { homePostcards } from '../support/postcards';
 // and the newest Post is a pinned Draft.
 test.use({ colorScheme: 'dark' });
 
-test('with no Pinned Post, the most recent Post is featured and the others follow, newest first', async ({
+test('with no Pinned Post, the most recent Post fills the top slot and the others follow, newest first', async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
@@ -22,7 +22,7 @@ test('with no Pinned Post, the most recent Post is featured and the others follo
   ]);
 });
 
-test('on the English home page too, the most recent translated Post is featured when nothing is pinned', async ({
+test('on the English home page too, the most recent translated Post fills the top slot when nothing is pinned', async ({
   page,
 }) => {
   // `le-plus-recent` has no Translation; the pinned Draft has one.

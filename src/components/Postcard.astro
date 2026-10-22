@@ -1,36 +1,38 @@
 ---
 import { formatDate, isoDate } from '../lib/dates';
 import { postPath, ui } from '../lib/i18n';
-import { getPostTags, readingMinutes, type PostView } from '../lib/posts';
+import { getTagLabels, readingMinutes, type PostView } from '../lib/posts';
+import Stamp from './Stamp.astro';
 
 interface Props {
   /** The Post, in the language of the page. */
   view: PostView;
-  /** A featured postcard spans the whole grid, with a bigger title. */
-  featured?: boolean;
+  /** In the home page's top slot, a postcard spans the whole grid, with a bigger title. */
+  topSlot?: boolean;
+  /** Its title's heading level: one below the heading of the page or section it is in. */
+  level?: 2 | 3;
 }
 
-const { view, featured = false } = Astro.props;
-const { locale, post, text } = view;
-const { title, description } = text.data;
+const { view, topSlot = false, level = 3 } = Astro.props;
+const Title = level === 2 ? 'h2' : 'h3';
+const { locale, post, entry } = view;
+const { title, description } = entry.data;
 const { publishedAt } = post.data;
-const tags = (await getPostTags(post)).map((tag) => tag.data[locale]);
+const tags = await getTagLabels(view);
 ---
 
-<li class:list={['postcard', { featured }]}>
-  <h3>
+<li class:list={['postcard', { 'top-slot': topSlot }]}>
+  <Title class="title">
     <a href={postPath(locale, post.id)}>{title}</a>
-  </h3>
+  </Title>
   <p class="description">{description}</p>
   <p class="postmark">
     <time datetime={isoDate(publishedAt)}>{formatDate(publishedAt, locale)}</time>
-    <span>{ui[locale].readingTime(readingMinutes(text.body))}</span>
+    <span>{ui[locale].readingTime(readingMinutes(entry.body))}</span>
     <span>{tags.map((tag) => `#${tag}`).join(' ')}</span>
   </p>
   {/* The first Tag, already read in the postmark. */}
-  <span class="stamp" aria-hidden="true">
-    {tags[0]}
-  </span>
+  <Stamp class="corner">{tags[0]}</Stamp>
 </li>
 
 <style>
@@ -62,12 +64,12 @@ const tags = (await getPostTags(post)).map((tag) => tag.data[locale]);
   .postcard:nth-child(3n) {
     --tilt: -0.4deg;
   }
-  .featured {
+  .top-slot {
     grid-column: 1 / -1;
     padding: 30px;
   }
 
-  h3 {
+  .title {
     grid-area: title;
     margin: 0;
     font-family: var(--font-display);
@@ -76,36 +78,34 @@ const tags = (await getPostTags(post)).map((tag) => tag.data[locale]);
     line-height: 1.12;
     letter-spacing: -0.015em;
   }
-  .featured h3 {
+  .top-slot .title {
     max-width: 22ch;
     font-size: clamp(1.7rem, 3.4vw, 2.4rem);
   }
-  h3 a {
+  .title a {
     color: inherit;
     text-decoration: none;
   }
   /* The whole postcard is the link's hit area. */
-  h3 a::after {
+  .title a::after {
     content: '';
     position: absolute;
     inset: 0;
   }
-  .postcard:hover h3 a {
+  .postcard:hover .title a {
     text-decoration: underline;
     text-decoration-color: var(--coral);
     text-decoration-thickness: 3px;
   }
   /* The focus ring goes round the postcard, the link's hit area, on the sea. */
-  h3 a:focus-visible {
+  .title a:focus-visible {
     outline: none;
     box-shadow: none;
   }
   .postcard:focus-within {
     outline: 3px solid var(--focus-ring);
     outline-offset: 4px;
-    box-shadow:
-      0 0 0 4px var(--focus-halo),
-      var(--shadow);
+    box-shadow: var(--focus-shadow-postcard);
   }
 
   p {
@@ -127,26 +127,10 @@ const tags = (await getPostTags(post)).map((tag) => tag.data[locale]);
     font-size: 0.75rem;
   }
 
-  .stamp {
+  .corner {
     grid-area: stamp;
-    display: grid;
-    place-items: center;
-    width: 72px;
-    height: 80px;
     margin: -6px -6px 0 0;
-    padding: 7px;
-    background: var(--sun);
-    color: var(--on-sun);
-    outline: 2px dashed var(--edge);
-    outline-offset: -6px;
-    font-family: var(--font-mono);
     font-size: 0.62rem;
-    font-weight: 600;
-    line-height: 1.15;
-    text-align: center;
-    hyphens: auto;
-    overflow-wrap: break-word;
-    transform: rotate(4deg);
   }
 
   /*
@@ -161,7 +145,7 @@ const tags = (await getPostTags(post)).map((tag) => tag.data[locale]);
     }
     .postcard:hover {
       transform: rotate(0) translateY(-4px);
-      box-shadow: 9px 9px 0 var(--edge);
+      box-shadow: var(--shadow-lg);
     }
   }
 </style>

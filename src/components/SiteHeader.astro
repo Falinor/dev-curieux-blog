@@ -166,12 +166,9 @@ const other = otherLocale(locale);
   nav a:hover {
     text-decoration: underline;
   }
-  /* The focus halo goes in front of the hard shadow, which stays. */
   .badge:focus-visible,
   nav a:focus-visible {
-    box-shadow:
-      0 0 0 2px var(--focus-halo),
-      var(--shadow-sm);
+    box-shadow: var(--focus-shadow-sm);
   }
 
   @media (max-width: 600px) {

@@ -1,20 +1,21 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import { type Locale, postPath, tagPath, ui } from '../lib/i18n';
-import type { PostView, Tag } from '../lib/posts';
+import { type Locale, tagPath, ui } from '../lib/i18n';
+import { tagLabel, type TaggedPosts } from '../lib/posts';
+import Postcard from './Postcard.astro';
+import PostcardGrid from './PostcardGrid.astro';
+import TitleCard from './TitleCard.astro';
 
-// A Tag's page: `/tags/<id>/` in French, `/en/tags/<id>/` in English, titled
-// with the Tag's label in that language. It lists the Posts that language's
-// pages show, newest first.
+// A Tag's page: `/tags/<id>/` in French, `/en/tags/<id>/` in English. A title
+// card over the horizon names the Tag in that language; below it, the Posts
+// that language's pages show, newest first, as postcards.
 
-interface Props {
+interface Props extends TaggedPosts {
   locale: Locale;
-  tag: Tag;
-  views: PostView[];
 }
 
 const { locale, tag, views } = Astro.props;
-const label = tag.data[locale];
+const label = tagLabel(tag, locale);
 const words = ui[locale].tag;
 ---
 
@@ -23,16 +24,17 @@ const words = ui[locale].tag;
   description={words.description(label)}
   alternates={{ fr: tagPath('fr', tag.id), en: tagPath('en', tag.id) }}
 >
-  <main>
-    <h1>{label}</h1>
+  <main class="page">
+    <TitleCard class="title">
+      <h1>{label}</h1>
+      <p class="lead">{words.description(label)}</p>
+    </TitleCard>
     {views.length > 0 ? (
-      <ul>
-        {views.map(({ post, text }) => (
-          <li>
-            <a href={postPath(locale, post.id)}>{text.data.title}</a>
-          </li>
+      <PostcardGrid>
+        {views.map((view) => (
+          <Postcard view={view} level={2} />
         ))}
-      </ul>
+      </PostcardGrid>
     ) : (
       <p>{ui[locale].noPosts}</p>
     )}
@@ -40,8 +42,12 @@ const words = ui[locale].tag;
 </BaseLayout>
 
 <style>
-  /* On the sea, a link takes the sea's text color: `link` only reads on cards. */
-  a {
-    color: var(--sea-text);
+  .title {
+    max-width: 740px;
+    margin-inline: auto;
+    margin-bottom: 56px;
+  }
+  h1 {
+    margin: 0 0 10px;
   }
 </style>

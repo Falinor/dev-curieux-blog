@@ -7,14 +7,14 @@ export type Translation = CollectionEntry<'translations'>;
 
 /**
  * A Post as the pages of one language show it. Its title, description and
- * body come from `text`: the Post itself in French, its Translation in English.
+ * body come from `entry`: the Post itself in French, its Translation in English.
  * Dates, Tags, `draft` and `pinned` always come from `post`.
  */
 export interface PostView {
   locale: Locale;
   post: Post;
-  /** The entry readers read: pass it to `render()` for the body. */
-  text: Post | Translation;
+  /** The collection entry readers read: pass it to `render()` for the body. */
+  entry: Post | Translation;
 }
 
 /** Every Post readers may see, newest first. Drafts are left out. */
@@ -30,23 +30,27 @@ export async function getPublishedPosts(): Promise<Post[]> {
  */
 export async function getPostsIn(locale: Locale): Promise<PostView[]> {
   const posts = await getPublishedPosts();
-  if (locale === 'fr') return posts.map((post) => ({ locale, post, text: post }));
+  if (locale === 'fr') return posts.map((post) => ({ locale, post, entry: post }));
   const translations = new Map(
     (await getCollection('translations')).map((translation) => [translation.id, translation]),
   );
   return posts.flatMap((post) => {
     const translation = translations.get(post.id);
-    return translation ? [{ locale, post, text: translation }] : [];
+    return translation ? [{ locale, post, entry: translation }] : [];
   });
 }
 
-/**
- * Every Post page of a language, with the Post's paths in both languages when
- * it has a Translation (a Post without one has no English page).
- */
-export async function getPostPages(
-  locale: Locale,
-): Promise<{ view: PostView; alternates: Alternates | undefined }[]> {
+// The props of the Post and Tag page routes: types, not interfaces, which
+// `getStaticPaths()` rejects for lacking an index signature.
+
+/** What a Post page shows: the Post, and its paths in both languages when it has a Translation. */
+export type PostPageContent = {
+  view: PostView;
+  alternates: Alternates | undefined;
+};
+
+/** Every Post page of a language (a Post without a Translation has no English page). */
+export async function getPostPages(locale: Locale): Promise<PostPageContent[]> {
   const [views, translated] = await Promise.all([getPostsIn(locale), getPostsIn('en')]);
   const inEnglish = new Set(translated.map(({ post }) => post.id));
   return views.map((view) => {
@@ -58,12 +62,18 @@ export async function getPostPages(
   });
 }
 
+/** A Tag, with the Posts of a language that carry it, newest first. */
+export type TaggedPosts = {
+  tag: Tag;
+  views: PostView[];
+};
+
 /**
- * Every Tag, with the Posts of a language that carry it, newest first. Every
- * Tag gets a page in both languages, even with no Post yet (or only Drafts), so
- * every Tag page has its counterpart in the other language.
+ * Every Tag, with its Posts in a language. Every Tag gets a page in both
+ * languages, even with no Post yet (or only Drafts), so every Tag page has its
+ * counterpart in the other language.
  */
-export async function getTagsIn(locale: Locale): Promise<{ tag: Tag; views: PostView[] }[]> {
+export async function getTagsIn(locale: Locale): Promise<TaggedPosts[]> {
   const [tags, views] = await Promise.all([getCollection('tags'), getPostsIn(locale)]);
   return tags.map((tag) => ({
     tag,
@@ -73,18 +83,28 @@ export async function getTagsIn(locale: Locale): Promise<{ tag: Tag; views: Post
 
 /**
  * How a home page lays out Posts (already newest first, as `getPostsIn()`
- * returns them): the Pinned Posts are featured at the top, or the most recent
- * Post when nothing is pinned; the others follow.
+ * returns them): the top slot holds the Pinned Posts, or the most recent Post
+ * when nothing is pinned; the others follow.
  */
-export function homeLayout(views: PostView[]): { featured: PostView[]; others: PostView[] } {
+export function homeLayout(views: PostView[]): { topSlot: PostView[]; others: PostView[] } {
   const pinned = views.filter(({ post }) => post.data.pinned);
-  const featured = pinned.length > 0 ? pinned : views.slice(0, 1);
-  return { featured, others: views.filter((view) => !featured.includes(view)) };
+  const topSlot = pinned.length > 0 ? pinned : views.slice(0, 1);
+  return { topSlot, others: views.filter((view) => !topSlot.includes(view)) };
 }
 
 /** The Post's Tags in frontmatter order: the first one is the Post's stamp. */
 export async function getPostTags(post: Post): Promise<Tag[]> {
   return getEntries(post.data.tags);
+}
+
+/** What readers of a language call a Tag. */
+export function tagLabel(tag: Tag, locale: Locale): string {
+  return tag.data[locale];
+}
+
+/** The labels of the Post's Tags in the view's language, the stamp first. */
+export async function getTagLabels({ locale, post }: PostView): Promise<string[]> {
+  return (await getPostTags(post)).map((tag) => tagLabel(tag, locale));
 }
 
 const wordsPerMinute = 200;

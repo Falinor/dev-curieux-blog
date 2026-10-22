@@ -4,8 +4,8 @@ import satori, { type Font } from 'satori';
 import sharp from 'sharp';
 import tokens from '../styles/tokens.css?raw';
 import { formatDate } from './dates';
-import { type Locale, ui } from './i18n';
-import { getPostTags, type PostView } from './posts';
+import { type Locale, socialImageSize, ui } from './i18n';
+import { getTagLabels, type PostView } from './posts';
 import { waveBox, waves } from './waves';
 
 // The social image link previews show (`og:image`): a 1200×630 PNG drawn at
@@ -14,10 +14,8 @@ import { waveBox, waves } from './waves';
 // `blog.curieux.dev` is written on the sea. Satori lays it out with the brand
 // fonts and turns the text into paths; sharp draws the PNG. No network.
 
-export const socialImageSize = { width: 1200, height: 630 };
-
-/** What a postcard says. */
-interface Postcard {
+/** What the image's postcard says. */
+interface CardText {
   /** The small line above the title. */
   kicker: string;
   title: string;
@@ -26,12 +24,12 @@ interface Postcard {
 }
 
 /** A Post's image (or its Translation's): its title, date and first Tag in the view's language. */
-export async function postSocialImage({ locale, post, text }: PostView): Promise<Response> {
-  const [stamp] = await getPostTags(post);
+export async function postSocialImage(view: PostView): Promise<Response> {
+  const [stamp] = await getTagLabels(view);
   return socialImage({
-    kicker: `Dev curieux · ${formatDate(post.data.publishedAt, locale)}`,
-    title: text.data.title,
-    stamp: stamp.data[locale],
+    kicker: `Dev curieux · ${formatDate(view.post.data.publishedAt, view.locale)}`,
+    title: view.entry.data.title,
+    stamp,
   });
 }
 
@@ -41,8 +39,8 @@ export function homeSocialImage(locale: Locale): Promise<Response> {
   return socialImage({ kicker: title, title: heading.join(''), stamp: 'blog' });
 }
 
-async function socialImage(postcard: Postcard): Promise<Response> {
-  const svg = await satori(scene(postcard), { ...socialImageSize, fonts: await brandFonts() });
+async function socialImage(text: CardText): Promise<Response> {
+  const svg = await satori(scene(text), { ...socialImageSize, fonts: await brandFonts() });
   const png = await sharp(Buffer.from(svg)).png().toBuffer();
   return new Response(new Uint8Array(png), { headers: { 'Content-Type': 'image/png' } });
 }
@@ -55,6 +53,16 @@ function dusk(token: string): string {
   const value = new RegExp(String.raw`--${token}:\s*light-dark\([^,]+,\s*([^)]+)\)`).exec(tokens);
   if (!value?.[1]) throw new Error(`tokens.css has no color token --${token}`);
   return value[1].trim();
+}
+
+/**
+ * A tactile token's length in pixels, read from `tokens.css`: the outline's
+ * width (`--outline: 3px solid …`), or a shadow's offset (`--shadow: 6px 6px …`).
+ */
+function length(token: string): number {
+  const value = new RegExp(String.raw`--${token}:\s*([\d.]+)px`).exec(tokens);
+  if (!value?.[1]) throw new Error(`tokens.css has no length token --${token}`);
+  return Number(value[1]);
 }
 
 // The fonts of the site, static instances: satori draws a variable font at its
@@ -105,10 +113,12 @@ const element = (type: string, style: Style, ...children: Child[]): Block => ({
   props: { style, children },
 });
 
-// The tactile primitive at the image's scale: link previews shrink it to
-// about half, so outlines and shadows are a little heavier than on the site.
-const outline = `4px solid ${dusk('edge')}`;
-const shadow = `10px 10px 0 ${dusk('edge')}`;
+// The tactile primitive of a title card (`--outline`, `--shadow-lg`), a
+// quarter heavier: link previews shrink the image to about half its size.
+const previewScale = 1.25;
+const outline = `${Math.round(previewScale * length('outline'))}px solid ${dusk('edge')}`;
+const shadowOffset = Math.round(previewScale * length('shadow-lg'));
+const shadow = `${shadowOffset}px ${shadowOffset}px 0 ${dusk('edge')}`;
 /** The sea below the waves, where the domain is written. */
 const seaHeight = 64;
 /** The sun sits on the horizon, its bottom just behind the back wave. */
@@ -130,11 +140,20 @@ const stars = [
   [96, 7, 2],
 ] as const;
 
-/** Long titles get a smaller size, and four lines at most, then an ellipsis. */
-function titleSize(title: string): number {
-  if (title.length <= 32) return 70;
-  if (title.length <= 64) return 58;
-  return 48;
+/** The postcard's content width, the gap between the title and the stamp, the stamp's margin round its frame. */
+const postcard = { width: 860, gap: 32, stampPadding: 9 };
+
+/**
+ * Long titles get a smaller size, and four lines at most, then an ellipsis.
+ * A smaller size too when the longest word would not fit on a line at this
+ * one (Bricolage Grotesque's glyphs average under 0.55em), down to 48px: past
+ * that, the word breaks.
+ */
+function titleSize(title: string, lineWidth: number): number {
+  const byLength = title.length <= 32 ? 70 : title.length <= 64 ? 58 : 48;
+  const longestWord = Math.max(...title.split(/\s+/).map((word) => word.length));
+  const fits = (size: number) => size <= byLength && 0.55 * longestWord * size <= lineWidth;
+  return [70, 58, 48].find(fits) ?? 48;
 }
 
 /**
@@ -148,9 +167,11 @@ function stampLayout(label: string): { width: number; fontSize: number } {
   return { width: Math.max(140, Math.ceil(0.6 * longestWord * fontSize) + 32), fontSize };
 }
 
-function scene({ kicker, title, stamp }: Postcard): Block {
+function scene({ kicker, title, stamp }: CardText): Block {
   const { width, height } = socialImageSize;
   const stampBox = stampLayout(stamp);
+  // Boxes are content-box: the stamp takes its width and its padding.
+  const titleWidth = postcard.width - postcard.gap - stampBox.width - 2 * postcard.stampPadding;
   return element(
     'div',
     {
@@ -240,8 +261,8 @@ function scene({ kicker, title, stamp }: Postcard): Block {
         {
           display: 'flex',
           alignItems: 'flex-start',
-          gap: 32,
-          width: 860,
+          gap: postcard.gap,
+          width: postcard.width,
           padding: '36px 36px 44px 44px',
           backgroundColor: dusk('card'),
           border: outline,
@@ -250,14 +271,22 @@ function scene({ kicker, title, stamp }: Postcard): Block {
         },
         element(
           'div',
-          { display: 'flex', flexDirection: 'column', flex: 1, gap: 16, paddingTop: 8 },
+          // `minWidth: 0`: a long word must wrap, not widen the column and push the stamp out.
+          {
+            display: 'flex',
+            flexDirection: 'column',
+            flex: 1,
+            minWidth: 0,
+            gap: 16,
+            paddingTop: 8,
+          },
           element('div', { fontFamily: 'Geist Mono', fontSize: 24, color: dusk('muted') }, kicker),
           element(
             'div',
             {
               fontFamily: 'Bricolage Grotesque',
               fontWeight: 800,
-              fontSize: titleSize(title),
+              fontSize: titleSize(title, titleWidth),
               lineHeight: 1.04,
               letterSpacing: '-0.02em',
               color: dusk('ink'),
@@ -275,7 +304,7 @@ function scene({ kicker, title, stamp }: Postcard): Block {
             flexShrink: 0,
             width: stampBox.width,
             height: 156,
-            padding: 9,
+            padding: postcard.stampPadding,
             backgroundColor: dusk('sun'),
             transform: 'rotate(4deg)',
           },

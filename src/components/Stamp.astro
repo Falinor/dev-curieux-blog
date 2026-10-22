@@ -1,0 +1,36 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+
+// A postage stamp: a sun-colored label in a dashed frame, slightly askew.
+// Decoration only, hidden from assistive technology: what it says is written
+// elsewhere on the card. The card places it and sizes its text.
+
+type Props = HTMLAttributes<'span'>;
+
+const { class: className, ...rest } = Astro.props;
+---
+
+<span class:list={['stamp', className]} aria-hidden="true" {...rest}>
+  <slot />
+</span>
+
+<style>
+  .stamp {
+    display: grid;
+    place-items: center;
+    width: 72px;
+    height: 80px;
+    padding: 7px;
+    background: var(--sun);
+    color: var(--on-sun);
+    outline: 2px dashed var(--edge);
+    outline-offset: -6px;
+    font-family: var(--font-mono);
+    font-weight: 600;
+    line-height: 1.15;
+    text-align: center;
+    hyphens: auto;
+    overflow-wrap: break-word;
+    transform: rotate(4deg);
+  }
+</style>

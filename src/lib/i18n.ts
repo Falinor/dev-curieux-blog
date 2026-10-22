@@ -4,6 +4,14 @@
 
 export const locales = ['fr', 'en'] as const;
 export type Locale = (typeof locales)[number];
+/** The language Posts are written in, served at the root. */
+export const defaultLocale: Locale = 'fr';
+
+/**
+ * Each language with its region, as a BCP 47 tag, for dates and link
+ * previews: French from France, British English.
+ */
+export const languageTags: Record<Locale, string> = { fr: 'fr-FR', en: 'en-GB' };
 
 /** The language of the page being built, from `Astro.currentLocale`. */
 export function pageLocale(currentLocale: string | undefined): Locale {
@@ -45,6 +53,9 @@ export function feedPath(locale: Locale): string {
 export function socialImagePath(pagePath: string): string {
   return `${pagePath}og.png`;
 }
+
+/** Every social image's size, in pixels: what link previews expect. */
+export const socialImageSize = { width: 1200, height: 630 };
 
 /**
  * The paths of one page in both languages, when it exists in both: a Post
@@ -91,6 +102,15 @@ export const ui = {
     legalNotice: 'Mentions légales',
     privacy: 'Confidentialité',
     tagline: 'codé au rythme des marées',
+    /** The 404 page, in French only: one page answers every unknown URL. */
+    notFound: {
+      title: 'Page introuvable — Dev curieux',
+      // The post office's rubber stamp on mail it can't deliver.
+      postmark: 'N’habite pas à l’adresse indiquée',
+      heading: 'Cette page a pris le large',
+      lead: 'Je ne trouve rien à cette adresse : le lien est peut-être cassé, ou la page a dérivé ailleurs.',
+      home: 'Retour à l’accueil',
+    },
   },
   en: {
     languageName: 'English',

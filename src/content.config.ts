@@ -2,11 +2,8 @@ import { readFileSync } from 'node:fs';
 import { defineCollection, reference } from 'astro:content';
 import { file, glob } from 'astro/loaders';
 import { z } from 'astro/zod';
+import { contentDir } from './lib/content-dir';
 
-// Root of all content. End-to-end tests point it at a fixture directory with the
-// same layout: `posts/` holds one `<slug>.mdx` file per Post (its Translation sits
-// next to it as `<slug>.en.mdx`), `tags.json` the Tags.
-const contentDir = process.env.BLOG_CONTENT_DIR || 'src/content';
 const tagsFile = `${contentDir}/tags.json`;
 
 // `reference()` alone only logs an unknown id, so a Post's Tags are first checked

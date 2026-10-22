@@ -50,6 +50,14 @@
    */
   --focus-ring: light-dark(var(--ink), var(--coral));
   --focus-halo: light-dark(var(--paper), transparent);
+  /*
+   * A focused element with a hard shadow keeps it, behind the halo: by
+   * daylight the `ink` ring would merge into the `edge` shadow. The halo fills
+   * the gap to the ring, which is 4px off a postcard.
+   */
+  --focus-shadow-sm: 0 0 0 2px var(--focus-halo), var(--shadow-sm);
+  --focus-shadow: 0 0 0 2px var(--focus-halo), var(--shadow);
+  --focus-shadow-postcard: 0 0 0 4px var(--focus-halo), var(--shadow);
 
   /* Page width and side gutter, shared by the header, the main column and the footer. */
   --page-width: 1120px;

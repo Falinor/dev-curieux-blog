@@ -1,0 +1,43 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+
+// The postcard that names a page, tilted over the horizon of the scene: a
+// Post's title card, a Tag page's, the 404 page's. It styles the page's `h1`
+// and its `lead` paragraph; the page places them and adds the rest.
+
+type Props = HTMLAttributes<'div'> & {
+  /** `header` when the card heads an `article`. */
+  as?: 'div' | 'header';
+};
+
+const { as: Card = 'div', class: className, ...rest } = Astro.props;
+---
+
+<Card class:list={['title-card', className]} {...rest}>
+  <slot />
+</Card>
+
+<style>
+  .title-card {
+    /* Over the waves at the bottom of the scene. */
+    margin-top: -70px;
+    padding: 26px 28px;
+    background: var(--card);
+    color: var(--ink);
+    border: var(--outline);
+    box-shadow: var(--shadow-lg);
+    transform: rotate(-1deg);
+  }
+  .title-card :global(h1) {
+    font-family: var(--font-display);
+    font-size: clamp(1.9rem, 4.6vw, 3rem);
+    font-weight: 800;
+    line-height: 1.04;
+    letter-spacing: -0.03em;
+  }
+  .title-card :global(.lead) {
+    margin: 0;
+    color: var(--muted);
+    font-size: 1.12rem;
+  }
+</style>

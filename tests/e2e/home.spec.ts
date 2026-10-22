@@ -18,7 +18,7 @@ test('the home page lists every Post with a link to its page', async ({ page }) 
   );
 });
 
-test('the Pinned Posts come first as featured postcards, newest first, then every other Post, newest first', async ({
+test('the Pinned Posts fill the top slot, newest first, then every other Post follows, newest first', async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
@@ -31,6 +31,7 @@ test('the Pinned Posts come first as featured postcards, newest first, then ever
     'Un troisième Post',
     'Un second Post',
     'Mon premier Post',
+    'IntersectionObserver en vrai',
   ]);
   expect(cards.filter(({ spansGrid }) => spansGrid).map(({ title }) => title)).toEqual([
     'Un Post épinglé récent',
@@ -42,12 +43,12 @@ test('at desktop width no row holds more than two postcards', async ({ page }) =
   await page.setViewportSize({ width: 1920, height: 1080 });
   await page.goto('/');
 
-  // Two featured postcards, then three others: two on a row, one on the next.
+  // Two postcards in the top slot, then four others, two on a row.
   expect(rows(await homePostcards(page))).toEqual([
     ['Un Post épinglé récent'],
     ['Un Post épinglé ancien'],
     ['Un troisième Post', 'Un second Post'],
-    ['Mon premier Post'],
+    ['Mon premier Post', 'IntersectionObserver en vrai'],
   ]);
 });
 
