@@ -1,10 +1,19 @@
 ---
+import { otherLocale, pageLocale, ui } from '../lib/i18n';
 import Waves from './Waves.astro';
 
 // The scene at the top of every page: a sunset sky with stars, the sun going
 // down behind drifting waves. Over it, the tilted « Dev curieux » badge, the
 // navigation, and whatever the page puts in its slot (the home page's hero).
 // The scene grows with that content and keeps clear of the waves.
+
+interface Props {
+  /** The same page in the other language (or, without one, its home page). */
+  languageSwitch: string;
+}
+
+const { languageSwitch } = Astro.props;
+const other = otherLocale(pageLocale(Astro.currentLocale));
 ---
 
 <header class="scene">
@@ -29,6 +38,12 @@ import Waves from './Waves.astro';
           <li>
             <a href="https://curieux.dev">
               curieux.dev<span aria-hidden="true"> ↗</span>
+            </a>
+          </li>
+          <li>
+            {/* Named in the language it leads to, so readers of it recognise it. */}
+            <a href={languageSwitch} hreflang={other} lang={other}>
+              {ui[other].languageName}
             </a>
           </li>
         </ul>

@@ -3,15 +3,21 @@ import { Font } from 'astro:assets';
 import Analytics from '../components/Analytics.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 import SiteHeader from '../components/SiteHeader.astro';
-import { pageLocale } from '../lib/i18n';
+import { type Alternates, homePath, otherLocale, pageLocale } from '../lib/i18n';
 import '../styles/global.css';
 
 interface Props {
   title: string;
+  /** The page's path in both languages, when it exists in both. */
+  alternates?: Alternates | undefined;
 }
 
-const { title } = Astro.props;
+const { title, alternates } = Astro.props;
 const locale = pageLocale(Astro.currentLocale);
+// The same page in the other language, or that language's home page when the
+// page has no counterpart (a Post without a Translation, the 404 page).
+const other = otherLocale(locale);
+const counterpart = alternates?.[other] ?? homePath(other);
 ---
 
 <!doctype html>
@@ -25,7 +31,7 @@ const locale = pageLocale(Astro.currentLocale);
     <Font cssVariable="--font-mono" preload />
   </head>
   <body>
-    <SiteHeader>
+    <SiteHeader languageSwitch={counterpart}>
       <slot name="hero" />
     </SiteHeader>
     <slot />

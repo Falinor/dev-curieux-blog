@@ -1,5 +1,5 @@
 import { getCollection, getEntries, type CollectionEntry } from 'astro:content';
-import type { Locale } from './i18n';
+import { type Alternates, type Locale, postPath } from './i18n';
 
 export type Post = CollectionEntry<'posts'>;
 export type Tag = CollectionEntry<'tags'>;
@@ -37,6 +37,24 @@ export async function getPostsIn(locale: Locale): Promise<PostView[]> {
   return posts.flatMap((post) => {
     const translation = translations.get(post.id);
     return translation ? [{ locale, post, text: translation }] : [];
+  });
+}
+
+/**
+ * Every Post page of a language, with the Post's paths in both languages when
+ * it has a Translation (a Post without one has no English page).
+ */
+export async function getPostPages(
+  locale: Locale,
+): Promise<{ view: PostView; alternates: Alternates | undefined }[]> {
+  const [views, translated] = await Promise.all([getPostsIn(locale), getPostsIn('en')]);
+  const inEnglish = new Set(translated.map(({ post }) => post.id));
+  return views.map((view) => {
+    const { id } = view.post;
+    const alternates = inEnglish.has(id)
+      ? { fr: postPath('fr', id), en: postPath('en', id) }
+      : undefined;
+    return { view, alternates };
   });
 }
 
