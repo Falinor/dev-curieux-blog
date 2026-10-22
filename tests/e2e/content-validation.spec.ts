@@ -39,3 +39,11 @@ test('a Post missing a required field fails the build, naming the Post and the f
   expect(output).toContain('posts → champ-manquant');
   expect(output).toMatch(/description\W*: .*Required/);
 });
+
+test('a misspelled frontmatter field fails the build instead of being ignored', async () => {
+  const { failed, output } = await build('tests/fixtures/unknown-field');
+
+  expect(failed).toBe(true);
+  expect(output).toContain('posts → cle-mal-ecrite');
+  expect(output).toContain('"drafts"');
+});
