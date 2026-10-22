@@ -17,6 +17,7 @@
     "format:check": "prettier --check .",
     "test:e2e": "playwright test",
     "test:unit": "node --test 'src/translation/**/*.test.ts'",
+    "translate": "node src/translation/cli.ts translate",
     "translations:check": "node src/translation/cli.ts check"
   },
   "dependencies": {

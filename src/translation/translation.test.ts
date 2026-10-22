@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdir, mkdtemp, readdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { chmod, mkdir, mkdtemp, readdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { delimiter, join } from 'node:path';
 import { test, type TestContext } from 'node:test';
 import { translatePosts, translationStatus, type Translator } from './translation.ts';
 
@@ -43,6 +43,9 @@ function fakeTranslator(): { translator: Translator; received: string[] } {
   return { translator, received };
 }
 
+// Why the `claude -p` adapter cannot translate when the `claude` command is missing.
+const NOT_INSTALLED = 'the claude command was not found: install Claude Code and log in';
+
 const unavailableTranslator: Translator = async () => ({
   unavailable: 'claude: command not found',
 });
@@ -69,13 +72,65 @@ async function snapshot(root: string): Promise<Record<string, string>> {
   );
 }
 
-// Runs the Translation command line on a content root, as CI and package scripts do.
-function cli(args: string[], contentDir: string) {
+// Runs the Translation command line on a content root, as CI, package scripts and
+// the pre-commit hook do. `path` replaces PATH, where the command finds `claude`.
+function cli(args: string[], contentDir: string, { path = process.env.PATH, cwd = '.' } = {}) {
   const script = join(import.meta.dirname, 'cli.ts');
   return spawnSync(process.execPath, [script, ...args], {
-    env: { ...process.env, BLOG_CONTENT_DIR: contentDir },
+    env: { ...process.env, BLOG_CONTENT_DIR: contentDir, PATH: path },
     encoding: 'utf8',
+    cwd,
   });
+}
+
+// A stand-in for the `claude` command, first on the returned PATH: it records the
+// French Post it gets on stdin, prints `output` as `claude -p --output-format json`
+// does, and exits with `exitCode`. The real command is never run by tests.
+async function fakeClaude(t: TestContext, output: object, exitCode = 0) {
+  const bin = await mkdtemp(join(tmpdir(), 'fake-claude-'));
+  t.after(() => rm(bin, { recursive: true, force: true }));
+  const log = join(bin, 'received.json');
+  await writeFile(log, '[]');
+  const script = `#!${process.execPath}
+const { readFileSync, writeFileSync } = require('node:fs');
+const log = ${JSON.stringify(log)};
+const received = JSON.parse(readFileSync(log, 'utf8'));
+writeFileSync(log, JSON.stringify([...received, readFileSync(0, 'utf8')]));
+process.stdout.write(${JSON.stringify(JSON.stringify(output))});
+process.exitCode = ${exitCode};
+`;
+  await writeFile(join(bin, 'claude'), script);
+  await chmod(join(bin, 'claude'), 0o755);
+  return {
+    path: `${bin}${delimiter}${process.env.PATH}`,
+    received: async (): Promise<string[]> => JSON.parse(await readFile(log, 'utf8')),
+  };
+}
+
+// What `claude -p --output-format json --json-schema …` prints when it translated.
+const TRANSLATED = {
+  type: 'result',
+  subtype: 'success',
+  is_error: false,
+  structured_output: { title: 'First post', description: 'My first post.', body: 'Hello world.' },
+};
+
+// Runs git in `repo`, returning its output.
+function git(repo: string, ...args: string[]): string {
+  const run = spawnSync('git', args, { cwd: repo, encoding: 'utf8' });
+  assert.equal(run.status, 0, run.stderr);
+  return run.stdout;
+}
+
+// The files in `repo`'s index that differ from its last commit, as `git commit` would record them.
+const staged = (repo: string) =>
+  git(repo, 'diff', '--cached', '--name-only').split('\n').filter(Boolean);
+
+// An empty directory to use as PATH: no `claude` command, as before installing Claude Code.
+async function emptyDir(t: TestContext): Promise<string> {
+  const dir = await mkdtemp(join(tmpdir(), 'empty-'));
+  t.after(() => rm(dir, { recursive: true, force: true }));
+  return dir;
 }
 
 test('status reports a Post without a Translation as missing', async (t) => {
@@ -257,4 +312,146 @@ test('an unknown command exits non-zero instead of passing silently', async (t) 
   const root = await contentRoot(t, { 'premier-post.mdx': PREMIER_POST });
 
   assert.equal(cli(['chek'], root).status, 2);
+});
+
+test('translate without Claude Code installed exits zero, warning about every untranslated Post', async (t) => {
+  const root = await contentRoot(t, {
+    'nouveau.mdx': PREMIER_POST,
+    'modifie.mdx': REVISED_POST,
+    'modifie.en.mdx': translation(PREMIER_POST_SHA256),
+    'brouillon.mdx': DRAFT_POST,
+  });
+  const before = await snapshot(root);
+
+  const { status, stderr } = cli(['translate'], root, { path: await emptyDir(t) });
+
+  assert.equal(status, 0);
+  assert.equal(
+    stderr,
+    [
+      'Warning: these Posts were not translated. Run `pnpm translate` once Claude Code works; until then the Translation check fails.',
+      `  ${join(root, 'posts', 'modifie.mdx')}: ${NOT_INSTALLED}`,
+      `  ${join(root, 'posts', 'nouveau.mdx')}: ${NOT_INSTALLED}`,
+      '',
+    ].join('\n'),
+  );
+  assert.deepEqual(await snapshot(root), before);
+});
+
+test('translate given Post files writes a Translation for each stale or missing one', async (t) => {
+  const root = await contentRoot(t, {
+    'nouveau.mdx': PREMIER_POST,
+    'deja-traduit.mdx': PREMIER_POST,
+    'deja-traduit.en.mdx': translation(PREMIER_POST_SHA256),
+    'brouillon.mdx': DRAFT_POST,
+  });
+  const claude = await fakeClaude(t, TRANSLATED);
+  const post = (name: string) => join(root, 'posts', name);
+
+  const { status, stdout } = cli(
+    ['translate', post('nouveau.mdx'), post('deja-traduit.mdx'), post('brouillon.mdx')],
+    root,
+    { path: claude.path },
+  );
+
+  assert.equal(status, 0);
+  assert.deepEqual(await claude.received(), [PREMIER_POST]);
+  assert.equal(await readPost(root, 'nouveau.en.mdx'), translation(PREMIER_POST_SHA256));
+  assert.equal(stdout, `Translated ${post('nouveau.mdx')} into ${post('nouveau.en.mdx')}\n`);
+  assert.deepEqual((await readdir(join(root, 'posts'))).toSorted(), [
+    'brouillon.mdx',
+    'deja-traduit.en.mdx',
+    'deja-traduit.mdx',
+    'nouveau.en.mdx',
+    'nouveau.mdx',
+  ]);
+});
+
+test('translate when Claude Code is not logged in warns with its message and writes nothing', async (t) => {
+  const root = await contentRoot(t, { 'nouveau.mdx': PREMIER_POST });
+  // What `claude -p --output-format json` prints, with exit code 1, before `/login`.
+  const claude = await fakeClaude(
+    t,
+    {
+      type: 'result',
+      subtype: 'success',
+      is_error: true,
+      result: 'Not logged in · Please run /login',
+      terminal_reason: 'api_error',
+    },
+    1,
+  );
+
+  const { status, stderr } = cli(['translate'], root, { path: claude.path });
+
+  assert.equal(status, 0);
+  assert.match(
+    stderr,
+    new RegExp(`^  ${RegExp.escape(join(root, 'posts', 'nouveau.mdx'))}: Not logged in`, 'm'),
+  );
+  assert.deepEqual(await readdir(join(root, 'posts')), ['nouveau.mdx']);
+});
+
+test('translate rejects an answer with an empty or missing field and writes nothing', async (t) => {
+  const root = await contentRoot(t, { 'nouveau.mdx': PREMIER_POST, 'modifie.mdx': REVISED_POST });
+  const emptyTitle = { ...TRANSLATED.structured_output, title: ' ' };
+  const claude = await fakeClaude(t, { ...TRANSLATED, structured_output: emptyTitle });
+  const noAnswer = await fakeClaude(t, { ...TRANSLATED, structured_output: undefined });
+  const post = (name: string) => join(root, 'posts', name);
+
+  const results = [
+    cli(['translate', post('nouveau.mdx')], root, { path: claude.path }),
+    cli(['translate', post('modifie.mdx')], root, { path: noAnswer.path }),
+  ];
+
+  for (const { status, stderr } of results) {
+    assert.equal(status, 0);
+    assert.match(stderr, /: claude answered without a title, description or body$/m);
+  }
+  assert.deepEqual((await readdir(join(root, 'posts'))).toSorted(), ['modifie.mdx', 'nouveau.mdx']);
+});
+
+test('translate --stage adds the written Translations to the commit in progress', async (t) => {
+  // A repository whose root is the content root, with the Posts the author staged.
+  const repo = await contentRoot(t, { 'nouveau.mdx': PREMIER_POST, 'brouillon.mdx': DRAFT_POST });
+  git(repo, 'init', '--quiet');
+  git(repo, 'add', 'posts');
+  const claude = await fakeClaude(t, TRANSLATED);
+
+  // As the pre-commit hook runs it: staged Post paths, relative to the repository root.
+  const { status } = cli(
+    ['translate', '--stage', 'posts/nouveau.mdx', 'posts/brouillon.mdx'],
+    repo,
+    {
+      path: claude.path,
+      cwd: repo,
+    },
+  );
+
+  assert.equal(status, 0);
+  assert.deepEqual(staged(repo), [
+    'posts/brouillon.mdx',
+    'posts/nouveau.en.mdx',
+    'posts/nouveau.mdx',
+  ]);
+});
+
+test('translate --stage also adds a fresh Translation the author left unstaged', async (t) => {
+  // The author ran `pnpm translate` after editing the Post, then staged only the Post.
+  const repo = await contentRoot(t, {
+    'deja-traduit.mdx': PREMIER_POST,
+    'deja-traduit.en.mdx': translation(PREMIER_POST_SHA256),
+  });
+  git(repo, 'init', '--quiet');
+  git(repo, 'add', 'posts/deja-traduit.mdx');
+  const claude = await fakeClaude(t, TRANSLATED);
+
+  const { status } = cli(['translate', '--stage', 'posts/deja-traduit.mdx'], repo, {
+    path: claude.path,
+    cwd: repo,
+  });
+
+  assert.equal(status, 0);
+  assert.deepEqual(await claude.received(), []);
+  assert.deepEqual(staged(repo), ['posts/deja-traduit.en.mdx', 'posts/deja-traduit.mdx']);
 });
