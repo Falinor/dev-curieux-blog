@@ -75,6 +75,13 @@ test('every page but the 404 page has Open Graph and Twitter card tags for link 
     expect(await content(page, 'meta[property="og:image:type"]'), path).toEqual(['image/png']);
     expect(await content(page, 'meta[name="twitter:card"]'), path).toEqual(['summary_large_image']);
     expect(await content(page, 'meta[name="twitter:image"]'), path).toEqual([image]);
+    // Said again for Twitter (X), which may not read Open Graph.
+    expect(await content(page, 'meta[name="twitter:title"]'), path).toEqual(
+      await content(page, 'meta[property="og:title"]'),
+    );
+    expect(await content(page, 'meta[name="twitter:description"]'), path).toEqual(
+      await content(page, 'meta[property="og:description"]'),
+    );
   }
 });
 
@@ -86,6 +93,10 @@ test('a Post page describes the Post to link previews: title, description, dates
   expect(await content(page, 'meta[property="og:type"]')).toEqual(['article']);
   expect(await content(page, 'meta[property="og:title"]')).toEqual(['Un second Post']);
   expect(await content(page, 'meta[property="og:description"]')).toEqual([
+    'Un Post plus long, mis à jour depuis sa publication.',
+  ]);
+  expect(await content(page, 'meta[name="twitter:title"]')).toEqual(['Un second Post']);
+  expect(await content(page, 'meta[name="twitter:description"]')).toEqual([
     'Un Post plus long, mis à jour depuis sa publication.',
   ]);
   expect(await content(page, 'meta[property="og:locale"]')).toEqual(['fr_FR']);

@@ -57,6 +57,8 @@ const {
 const absolute = (path: string) => new URL(path, Astro.site).href;
 const canonical = absolute(Astro.url.pathname);
 const imageUrl = absolute(image);
+// Link previews name a Post by its own title, without the site's name.
+const previewTitle = post?.headline ?? title;
 // Both versions, with French, the original, as the default.
 const hreflangs = alternates
   ? Object.entries({ fr: alternates.fr, en: alternates.en, 'x-default': alternates.fr }).map(
@@ -101,7 +103,7 @@ const blogPosting = post && {
   <>
     <meta property="og:type" content={post ? 'article' : 'website'} />
     <meta property="og:site_name" content="Dev curieux" />
-    <meta property="og:title" content={post?.headline ?? title} />
+    <meta property="og:title" content={previewTitle} />
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />
     <meta property="og:locale" content={ogLocale(locale)} />
@@ -112,7 +114,7 @@ const blogPosting = post && {
     <meta property="og:image:width" content={String(socialImageSize.width)} />
     <meta property="og:image:height" content={String(socialImageSize.height)} />
     <meta property="og:image:type" content="image/png" />
-    <meta property="og:image:alt" content={post?.headline ?? title} />
+    <meta property="og:image:alt" content={previewTitle} />
     {post && (
       <>
         <meta property="article:published_time" content={post.publishedAt.toISOString()} />
@@ -125,6 +127,8 @@ const blogPosting = post && {
       </>
     )}
     <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={previewTitle} />
+    <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={imageUrl} />
     {blogPosting && (
       <script
