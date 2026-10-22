@@ -37,6 +37,15 @@ export function feedPath(locale: Locale): string {
 }
 
 /**
+ * A page's social image, the 1200×630 PNG link previews show: next to the page,
+ * `<page path>og.png` (`/premier-post/og.png`, `/en/og.png`). Post pages have
+ * their own; every other page shows its language's home page image.
+ */
+export function socialImagePath(pagePath: string): string {
+  return `${pagePath}og.png`;
+}
+
+/**
  * The paths of one page in both languages, when it exists in both: a Post
  * with a Translation, a home page, a Tag page. A page with no counterpart (a
  * Post without a Translation, the 404 page) has none.

@@ -49,3 +49,92 @@ test('the 404 page asks search engines not to index it, and declares no canonica
   expect(await content(page, 'meta[name="robots"]')).toEqual(['noindex']);
   expect(await content(page, 'link[rel="canonical"]')).toEqual([]);
 });
+
+test('every page but the 404 page has Open Graph and Twitter card tags for link previews', async ({
+  page,
+}, testInfo) => {
+  for (const path of await builtPages(testInfo)) {
+    if (path === notFound) continue;
+    await page.goto(path);
+    const english = path.startsWith('/en/');
+
+    expect(await content(page, 'meta[property="og:site_name"]'), path).toEqual(['Dev curieux']);
+    expect(await content(page, 'meta[property="og:url"]'), path).toEqual([`${site}${path}`]);
+    expect(await content(page, 'meta[property="og:locale"]'), path).toEqual([
+      english ? 'en_GB' : 'fr_FR',
+    ]);
+    for (const property of ['og:type', 'og:title', 'og:description', 'og:image:alt']) {
+      const [value, ...others] = await content(page, `meta[property="${property}"]`);
+      expect(value?.trim(), `${path} ${property}`).toBeTruthy();
+      expect(others, `${path} ${property}`).toEqual([]);
+    }
+    const [image] = await content(page, 'meta[property="og:image"]');
+    expect(image, path).toMatch(new RegExp(`^${site}/(en/)?([a-z0-9-]+/)?og\\.png$`));
+    expect(await content(page, 'meta[property="og:image:width"]'), path).toEqual(['1200']);
+    expect(await content(page, 'meta[property="og:image:height"]'), path).toEqual(['630']);
+    expect(await content(page, 'meta[property="og:image:type"]'), path).toEqual(['image/png']);
+    expect(await content(page, 'meta[name="twitter:card"]'), path).toEqual(['summary_large_image']);
+    expect(await content(page, 'meta[name="twitter:image"]'), path).toEqual([image]);
+  }
+});
+
+test('a Post page describes the Post to link previews: title, description, dates, Tags, language', async ({
+  page,
+}) => {
+  await page.goto('/second-post/');
+
+  expect(await content(page, 'meta[property="og:type"]')).toEqual(['article']);
+  expect(await content(page, 'meta[property="og:title"]')).toEqual(['Un second Post']);
+  expect(await content(page, 'meta[property="og:description"]')).toEqual([
+    'Un Post plus long, mis à jour depuis sa publication.',
+  ]);
+  expect(await content(page, 'meta[property="og:locale"]')).toEqual(['fr_FR']);
+  // `second-post` has no Translation.
+  expect(await content(page, 'meta[property="og:locale:alternate"]')).toEqual([]);
+  expect(await content(page, 'meta[property="og:image"]')).toEqual([`${site}/second-post/og.png`]);
+  expect(await content(page, 'meta[property="article:published_time"]')).toEqual([
+    '2026-09-15T00:00:00.000Z',
+  ]);
+  expect(await content(page, 'meta[property="article:modified_time"]')).toEqual([
+    '2026-10-01T00:00:00.000Z',
+  ]);
+  expect(await content(page, 'meta[property="article:tag"]')).toEqual(['Astro']);
+});
+
+test('an English Post page describes the Translation to link previews, with the Post’s dates and English Tags', async ({
+  page,
+}) => {
+  await page.goto('/en/premier-post/');
+
+  expect(await content(page, 'meta[property="og:type"]')).toEqual(['article']);
+  expect(await content(page, 'meta[property="og:title"]')).toEqual(['My first post']);
+  expect(await content(page, 'meta[property="og:description"]')).toEqual([
+    'The very first post on the blog, to check that everything works.',
+  ]);
+  expect(await content(page, 'meta[property="og:locale"]')).toEqual(['en_GB']);
+  expect(await content(page, 'meta[property="og:locale:alternate"]')).toEqual(['fr_FR']);
+  expect(await content(page, 'meta[property="og:image"]')).toEqual([
+    `${site}/en/premier-post/og.png`,
+  ]);
+  expect(await content(page, 'meta[property="article:published_time"]')).toEqual([
+    '2026-09-01T00:00:00.000Z',
+  ]);
+  // Never updated: no modification date.
+  expect(await content(page, 'meta[property="article:modified_time"]')).toEqual([]);
+  expect(await content(page, 'meta[property="article:tag"]')).toEqual(['Product', 'Astro']);
+});
+
+test('pages that are not Posts are websites, previewed with their language’s home image', async ({
+  page,
+}) => {
+  for (const [path, image] of [
+    ['/', `${site}/og.png`],
+    ['/en/tags/astro/', `${site}/en/og.png`],
+  ]) {
+    await page.goto(path);
+
+    expect(await content(page, 'meta[property="og:type"]'), path).toEqual(['website']);
+    expect(await content(page, 'meta[property="og:image"]'), path).toEqual([image]);
+    expect(await content(page, 'meta[property^="article:"]'), path).toEqual([]);
+  }
+});
