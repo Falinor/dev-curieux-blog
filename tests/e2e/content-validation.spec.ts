@@ -47,3 +47,10 @@ test('a misspelled frontmatter field fails the build instead of being ignored', 
   expect(output).toContain('posts → cle-mal-ecrite');
   expect(output).toContain('"drafts"');
 });
+
+test('a Tag id that is not lowercase ASCII fails the build, naming the Tag', async () => {
+  const { failed, output } = await build('tests/fixtures/bad-tag-id');
+
+  expect(failed).toBe(true);
+  expect(output).toContain('tags → Accessibilité');
+});

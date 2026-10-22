@@ -24,8 +24,11 @@ const tagId = z
 
 const tags = defineCollection({
   loader: file(tagsFile),
-  schema: z.object({
-    id: z.string(),
+  schema: z.strictObject({
+    // Stable: the id is the Tag page URL in both languages.
+    id: z.string().regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, {
+      error: 'A Tag id is lowercase ASCII letters and digits, words joined by "-"',
+    }),
     fr: z.string(),
     en: z.string(),
   }),
