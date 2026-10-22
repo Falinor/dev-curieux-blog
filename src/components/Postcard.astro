@@ -17,7 +17,7 @@ const tags = await getPostTags(post);
   <h3>
     <a href={`/${post.id}/`}>{title}</a>
   </h3>
-  <p>{description}</p>
+  <p class="description">{description}</p>
   <p class="postmark">
     <time datetime={isoDate(publishedAt)}>{formatDate(publishedAt)}</time>
     <span>{readingMinutes(post.body)} min de lecture</span>
@@ -30,11 +30,16 @@ const tags = await getPostTags(post);
 </li>
 
 <style>
+  /* The stamp sits in the top right corner, beside the title and description. */
   .postcard {
     position: relative;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+    display: grid;
+    grid-template:
+      'title stamp' auto
+      'description stamp' 1fr
+      'postmark postmark' auto
+      / minmax(0, 1fr) auto;
+    gap: 10px 16px;
     min-width: 0;
     padding: 22px 22px 18px;
     background: var(--card);
@@ -59,9 +64,8 @@ const tags = await getPostTags(post);
   }
 
   h3 {
+    grid-area: title;
     margin: 0;
-    /* Room for the stamp in the top right corner. */
-    padding-right: 74px;
     font-family: var(--font-display);
     font-size: 1.35rem;
     font-weight: 800;
@@ -100,11 +104,15 @@ const tags = await getPostTags(post);
     margin: 0;
     color: var(--muted);
   }
+  .description {
+    grid-area: description;
+  }
   .postmark {
+    grid-area: postmark;
+    align-self: end;
     display: flex;
     flex-wrap: wrap;
     gap: 4px 12px;
-    margin-top: auto;
     padding-top: 8px;
     border-top: 2px dotted var(--rule);
     font-family: var(--font-mono);
@@ -112,33 +120,24 @@ const tags = await getPostTags(post);
   }
 
   .stamp {
-    position: absolute;
-    top: 14px;
-    right: 14px;
+    grid-area: stamp;
     display: grid;
     place-items: center;
-    width: 62px;
-    height: 70px;
-    padding: 8px;
+    width: 72px;
+    height: 80px;
+    margin: -6px -6px 0 0;
+    padding: 7px;
     background: var(--sun);
     color: var(--on-sun);
     outline: 2px dashed var(--edge);
     outline-offset: -6px;
     font-family: var(--font-mono);
-    font-size: 0.66rem;
+    font-size: 0.62rem;
     font-weight: 600;
     line-height: 1.15;
     text-align: center;
     hyphens: auto;
-    overflow-wrap: anywhere;
+    overflow-wrap: break-word;
     transform: rotate(4deg);
-  }
-
-  @media (max-width: 600px) {
-    h3,
-    .featured h3 {
-      padding-top: 66px;
-      padding-right: 0;
-    }
   }
 </style>
