@@ -1,6 +1,7 @@
 import type { Page } from '@playwright/test';
 
-export interface Postcard {
+/** A postcard as the reader sees it: its title, and where it sits. */
+export interface PostcardBox {
   title: string;
   /** Layout box, ignoring the tilt: cards on the same row share `top`. */
   top: number;
@@ -16,7 +17,7 @@ export interface Postcard {
 export async function homePostcards(
   page: Page,
   region: 'Dernières nouvelles' | 'Latest news' = 'Dernières nouvelles',
-): Promise<Postcard[]> {
+): Promise<PostcardBox[]> {
   const list = page.getByRole('region', { name: region }).getByRole('list');
   return list.evaluate((grid) =>
     [...grid.children].map((card) => {
@@ -32,7 +33,7 @@ export async function homePostcards(
 }
 
 /** Titles grouped by the row they sit on. */
-export function rows(cards: Postcard[]): string[][] {
+export function rows(cards: PostcardBox[]): string[][] {
   const byTop = Map.groupBy(cards, (card) => card.top);
   return [...byTop.values()].map((row) => row.map((card) => card.title));
 }

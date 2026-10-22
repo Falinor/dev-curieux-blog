@@ -16,8 +16,8 @@ import { waveBox, waves } from './waves';
 
 export const socialImageSize = { width: 1200, height: 630 };
 
-/** What a postcard says. */
-interface Postcard {
+/** What the image's postcard says. */
+interface CardText {
   /** The small line above the title. */
   kicker: string;
   title: string;
@@ -41,8 +41,8 @@ export function homeSocialImage(locale: Locale): Promise<Response> {
   return socialImage({ kicker: title, title: heading.join(''), stamp: 'blog' });
 }
 
-async function socialImage(postcard: Postcard): Promise<Response> {
-  const svg = await satori(scene(postcard), { ...socialImageSize, fonts: await brandFonts() });
+async function socialImage(text: CardText): Promise<Response> {
+  const svg = await satori(scene(text), { ...socialImageSize, fonts: await brandFonts() });
   const png = await sharp(Buffer.from(svg)).png().toBuffer();
   return new Response(new Uint8Array(png), { headers: { 'Content-Type': 'image/png' } });
 }
@@ -148,7 +148,7 @@ function stampLayout(label: string): { width: number; fontSize: number } {
   return { width: Math.max(140, Math.ceil(0.6 * longestWord * fontSize) + 32), fontSize };
 }
 
-function scene({ kicker, title, stamp }: Postcard): Block {
+function scene({ kicker, title, stamp }: CardText): Block {
   const { width, height } = socialImageSize;
   const stampBox = stampLayout(stamp);
   return element(
