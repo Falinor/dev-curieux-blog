@@ -63,3 +63,17 @@ test('status reports a Translation generated from the current Post as fresh', as
     [{ slug: 'premier-post', status: 'fresh' }],
   );
 });
+
+test('a title-only change in a Post makes its Translation stale', async (t) => {
+  const root = await contentRoot(t, {
+    'premier-post.mdx': PREMIER_POST.replace('title: Premier post', 'title: Premier post, revu'),
+    'premier-post.en.mdx': translation(PREMIER_POST_SHA256),
+  });
+
+  const statuses = await translationStatus(root);
+
+  assert.deepEqual(
+    statuses.map(({ slug, status }) => ({ slug, status })),
+    [{ slug: 'premier-post', status: 'stale' }],
+  );
+});
