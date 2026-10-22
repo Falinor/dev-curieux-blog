@@ -1,7 +1,7 @@
 import { defineConfig, devices, type Project } from '@playwright/test';
 
-// Each fixture site is built from its own content root
-// (`tests/fixtures/<site>`) into its own output directory, so the real build in
+// Each fixture site is built from a content root (`tests/fixtures/<content>`,
+// by default its own name) into its own output directory, so the real build in
 // `dist/` is never replaced by test content, and served on its own port.
 // `--ignore-lock` keeps the preview server in the foreground (Astro backgrounds
 // it when an agent runs it) and lets it run next to a preview the author already
@@ -9,12 +9,35 @@ import { defineConfig, devices, type Project } from '@playwright/test';
 // other sites take the ports a hundred above it.
 const port = Number(process.env.E2E_PORT) || 4322;
 
-const sites = [
+interface Site {
+  name: string;
+  port: number;
+  testDir: string;
+  testIgnore?: string[];
+  /** The fixture content root, when it isn't the site's name. */
+  content?: string;
+  /** Build environment variables. */
+  env?: Record<string, string>;
+}
+
+const sites: Site[] = [
   // The main fixture site: most specs, in `tests/e2e/`.
-  { name: 'site', port, testDir: './tests/e2e', testIgnore: ['no-pinned/**'] },
+  { name: 'site', port, testDir: './tests/e2e', testIgnore: ['no-pinned/**', 'analytics/**'] },
   // No published Post is pinned: specs in `tests/e2e/no-pinned/`.
   { name: 'no-pinned', port: port + 100, testDir: './tests/e2e/no-pinned' },
+  // The main fixture content built with an analytics token, as production is:
+  // specs in `tests/e2e/analytics/`.
+  {
+    name: 'analytics',
+    content: 'site',
+    env: { CF_BEACON_TOKEN: 'test-token' },
+    port: port + 200,
+    testDir: './tests/e2e/analytics',
+  },
 ];
+
+// No site gets the author's analytics settings from the shell or a `.env` file.
+const defaultEnv = { CF_BEACON_TOKEN: '', WORKERS_CI_BRANCH: '' };
 
 const chromium: Project['use'] = {
   ...devices['Desktop Chrome'],
@@ -27,7 +50,11 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   webServer: sites.map((site) => ({
     command: `astro build --outDir dist-e2e/${site.name} && astro preview --ignore-lock --outDir dist-e2e/${site.name} --port ${site.port}`,
-    env: { BLOG_CONTENT_DIR: `tests/fixtures/${site.name}` },
+    env: {
+      ...defaultEnv,
+      ...site.env,
+      BLOG_CONTENT_DIR: `tests/fixtures/${site.content ?? site.name}`,
+    },
     url: `http://localhost:${site.port}`,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
@@ -37,5 +64,7 @@ export default defineConfig({
     testDir: site.testDir,
     testIgnore: site.testIgnore,
     use: { ...chromium, baseURL: `http://localhost:${site.port}` },
+    // Specs list the site's pages from its build output (`support/pages.ts`).
+    metadata: { outDir: `dist-e2e/${site.name}` },
   })),
 });
