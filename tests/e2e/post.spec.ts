@@ -8,6 +8,9 @@ test.use({ colorScheme: 'dark' });
 const dusk = {
   edge: 'rgb(6, 3, 13)',
   card: 'rgb(42, 32, 82)',
+  rule: 'rgb(58, 46, 102)',
+  sun: 'rgb(255, 198, 61)',
+  onSun: 'rgb(28, 20, 12)',
 };
 const outline = `3px solid ${dusk.edge}`;
 const shadow = (offset: number) => `${dusk.edge} ${offset}px ${offset}px 0px 0px`;
@@ -53,6 +56,37 @@ test('a Post opens on a title postcard overlapping the horizon, with its dates, 
     'href',
     '/tags/astro/',
   );
+});
+
+test('a Post body sits on a sheet, with display headings, a quote card and inline code', async ({
+  page,
+}) => {
+  await page.goto('/troisieme-post/');
+  const article = page.getByRole('article');
+
+  const sheet = await cardAround(article.getByText('Une traduction faite à la main'));
+  expect(sheet).toMatchObject({ outline, shadow: shadow(8), background: dusk.card });
+  expect(sheet?.transform, 'the sheet stays straight for reading').toBe('none');
+
+  for (const heading of [
+    article.getByRole('heading', { level: 2, name: 'Le problème' }),
+    article.getByRole('heading', { level: 3, name: 'Le script' }),
+  ]) {
+    await expect(heading).toHaveCSS('font-family', /Bricolage Grotesque/);
+  }
+
+  const quote = article.getByRole('blockquote');
+  await expect(quote).toContainText('Les brouillons ne sont jamais traduits');
+  expect(await cardAround(quote)).toMatchObject({
+    outline,
+    shadow: shadow(4),
+    background: dusk.sun,
+  });
+  await expect(quote).toHaveCSS('color', dusk.onSun);
+
+  const inlineCode = article.getByText('pre-commit', { exact: true });
+  await expect(inlineCode).toHaveCSS('font-family', /Geist Mono/);
+  await expect(inlineCode).toHaveCSS('background-color', dusk.rule);
 });
 
 test('a Post page without an update date shows no update line, and every Tag by its French label', async ({

@@ -116,4 +116,30 @@ const tags = await getPostTags(post);
     border: var(--outline);
     box-shadow: var(--shadow-lg);
   }
+
+  /* The body, written in MDX: running text, never tactile. */
+  .sheet :global(h2),
+  .sheet :global(h3) {
+    font-family: var(--font-display);
+    letter-spacing: -0.01em;
+    line-height: 1.2;
+  }
+  .sheet :global(code) {
+    padding: 0.1em 0.35em;
+    background: var(--rule);
+    border-radius: 4px;
+    font-family: var(--font-mono);
+    font-size: 0.86em;
+  }
+
+  /* Quotes are postcards: a tilted sun card. */
+  .sheet :global(blockquote) {
+    margin-inline: 0;
+    padding: 14px 18px;
+    background: var(--sun);
+    color: var(--on-sun);
+    border: var(--outline);
+    box-shadow: var(--shadow-sm);
+    transform: rotate(-0.6deg);
+  }
 </style>
