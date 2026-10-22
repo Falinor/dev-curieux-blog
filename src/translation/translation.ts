@@ -45,8 +45,8 @@ const TRANSLATION_SUFFIX = '.en.mdx';
 export async function translationStatus(contentDir: string): Promise<PostTranslation[]> {
   const statuses: PostTranslation[] = [];
   for (const post of await postFiles(contentDir)) {
-    const status = await postTranslation(post);
-    if (status) statuses.push(status);
+    const entry = await postTranslation(post);
+    if (entry) statuses.push(entry);
   }
   return statuses;
 }
