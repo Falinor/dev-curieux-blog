@@ -55,6 +55,16 @@ function dusk(token: string): string {
   return value[1].trim();
 }
 
+/**
+ * A tactile token's length in pixels, read from `tokens.css`: the outline's
+ * width (`--outline: 3px solid …`), or a shadow's offset (`--shadow: 6px 6px …`).
+ */
+function length(token: string): number {
+  const value = new RegExp(String.raw`--${token}:\s*([\d.]+)px`).exec(tokens);
+  if (!value?.[1]) throw new Error(`tokens.css has no length token --${token}`);
+  return Number(value[1]);
+}
+
 // The fonts of the site, static instances: satori draws a variable font at its
 // default weight only. The Latin subset covers French and English.
 const require = createRequire(import.meta.url);
@@ -103,10 +113,12 @@ const element = (type: string, style: Style, ...children: Child[]): Block => ({
   props: { style, children },
 });
 
-// The tactile primitive at the image's scale: link previews shrink it to
-// about half, so outlines and shadows are a little heavier than on the site.
-const outline = `4px solid ${dusk('edge')}`;
-const shadow = `10px 10px 0 ${dusk('edge')}`;
+// The tactile primitive of a title card (`--outline`, `--shadow-lg`), a
+// quarter heavier: link previews shrink the image to about half its size.
+const previewScale = 1.25;
+const outline = `${Math.round(previewScale * length('outline'))}px solid ${dusk('edge')}`;
+const shadowOffset = Math.round(previewScale * length('shadow-lg'));
+const shadow = `${shadowOffset}px ${shadowOffset}px 0 ${dusk('edge')}`;
 /** The sea below the waves, where the domain is written. */
 const seaHeight = 64;
 /** The sun sits on the horizon, its bottom just behind the back wave. */
