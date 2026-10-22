@@ -13,15 +13,15 @@ interface Props {
 }
 
 const { view, alternates } = Astro.props;
-const { locale, post, text } = view;
-const { title, description } = text.data;
+const { locale, post, entry } = view;
+const { title, description } = entry.data;
 const meta = {
   headline: title,
   publishedAt: post.data.publishedAt,
   updatedAt: post.data.updatedAt,
   tags: (await getPostTags(post)).map((tag) => tag.data[locale]),
 };
-const { Content } = await render(text);
+const { Content } = await render(entry);
 ---
 
 <BaseLayout

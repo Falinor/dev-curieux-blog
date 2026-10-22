@@ -26,11 +26,11 @@ interface Postcard {
 }
 
 /** A Post's image (or its Translation's): its title, date and first Tag in the view's language. */
-export async function postSocialImage({ locale, post, text }: PostView): Promise<Response> {
+export async function postSocialImage({ locale, post, entry }: PostView): Promise<Response> {
   const [stamp] = await getPostTags(post);
   return socialImage({
     kicker: `Dev curieux · ${formatDate(post.data.publishedAt, locale)}`,
-    title: text.data.title,
+    title: entry.data.title,
     stamp: stamp.data[locale],
   });
 }

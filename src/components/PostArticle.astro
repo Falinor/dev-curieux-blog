@@ -13,8 +13,8 @@ interface Props {
 }
 
 const { view } = Astro.props;
-const { locale, post, text } = view;
-const { title, description } = text.data;
+const { locale, post, entry } = view;
+const { title, description } = entry.data;
 const { publishedAt, updatedAt } = post.data;
 const tags = await getPostTags(post);
 const words = ui[locale];
@@ -36,7 +36,7 @@ const email = 'contact@curieux.dev';
           {words.updated} <time datetime={isoDate(updatedAt)}>{formatDate(updatedAt, locale)}</time>
         </span>
       )}
-      <span>{words.readingTime(readingMinutes(text.body))}</span>
+      <span>{words.readingTime(readingMinutes(entry.body))}</span>
     </p>
     <h1>{title}</h1>
     <p class="lead">{description}</p>

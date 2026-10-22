@@ -11,8 +11,8 @@ interface Props {
 }
 
 const { view, topSlot = false } = Astro.props;
-const { locale, post, text } = view;
-const { title, description } = text.data;
+const { locale, post, entry } = view;
+const { title, description } = entry.data;
 const { publishedAt } = post.data;
 const tags = (await getPostTags(post)).map((tag) => tag.data[locale]);
 ---
@@ -24,7 +24,7 @@ const tags = (await getPostTags(post)).map((tag) => tag.data[locale]);
   <p class="description">{description}</p>
   <p class="postmark">
     <time datetime={isoDate(publishedAt)}>{formatDate(publishedAt, locale)}</time>
-    <span>{ui[locale].readingTime(readingMinutes(text.body))}</span>
+    <span>{ui[locale].readingTime(readingMinutes(entry.body))}</span>
     <span>{tags.map((tag) => `#${tag}`).join(' ')}</span>
   </p>
   {/* The first Tag, already read in the postmark. */}

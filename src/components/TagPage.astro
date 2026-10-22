@@ -27,9 +27,9 @@ const words = ui[locale].tag;
     <h1>{label}</h1>
     {views.length > 0 ? (
       <ul>
-        {views.map(({ post, text }) => (
+        {views.map(({ post, entry }) => (
           <li>
-            <a href={postPath(locale, post.id)}>{text.data.title}</a>
+            <a href={postPath(locale, post.id)}>{entry.data.title}</a>
           </li>
         ))}
       </ul>

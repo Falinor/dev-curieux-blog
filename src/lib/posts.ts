@@ -7,14 +7,14 @@ export type Translation = CollectionEntry<'translations'>;
 
 /**
  * A Post as the pages of one language show it. Its title, description and
- * body come from `text`: the Post itself in French, its Translation in English.
+ * body come from `entry`: the Post itself in French, its Translation in English.
  * Dates, Tags, `draft` and `pinned` always come from `post`.
  */
 export interface PostView {
   locale: Locale;
   post: Post;
-  /** The entry readers read: pass it to `render()` for the body. */
-  text: Post | Translation;
+  /** The collection entry readers read: pass it to `render()` for the body. */
+  entry: Post | Translation;
 }
 
 /** Every Post readers may see, newest first. Drafts are left out. */
@@ -30,13 +30,13 @@ export async function getPublishedPosts(): Promise<Post[]> {
  */
 export async function getPostsIn(locale: Locale): Promise<PostView[]> {
   const posts = await getPublishedPosts();
-  if (locale === 'fr') return posts.map((post) => ({ locale, post, text: post }));
+  if (locale === 'fr') return posts.map((post) => ({ locale, post, entry: post }));
   const translations = new Map(
     (await getCollection('translations')).map((translation) => [translation.id, translation]),
   );
   return posts.flatMap((post) => {
     const translation = translations.get(post.id);
-    return translation ? [{ locale, post, text: translation }] : [];
+    return translation ? [{ locale, post, entry: translation }] : [];
   });
 }
 
