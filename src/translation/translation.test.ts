@@ -435,3 +435,23 @@ test('translate --stage adds the written Translations to the commit in progress'
     'posts/nouveau.mdx',
   ]);
 });
+
+test('translate --stage also adds a fresh Translation the author left unstaged', async (t) => {
+  // The author ran `pnpm translate` after editing the Post, then staged only the Post.
+  const repo = await contentRoot(t, {
+    'deja-traduit.mdx': PREMIER_POST,
+    'deja-traduit.en.mdx': translation(PREMIER_POST_SHA256),
+  });
+  git(repo, 'init', '--quiet');
+  git(repo, 'add', 'posts/deja-traduit.mdx');
+  const claude = await fakeClaude(t, TRANSLATED);
+
+  const { status } = cli(['translate', '--stage', 'posts/deja-traduit.mdx'], repo, {
+    path: claude.path,
+    cwd: repo,
+  });
+
+  assert.equal(status, 0);
+  assert.deepEqual(await claude.received(), []);
+  assert.deepEqual(staged(repo), ['posts/deja-traduit.en.mdx', 'posts/deja-traduit.mdx']);
+});

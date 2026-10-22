@@ -34,10 +34,10 @@ if (command === 'check') {
   for (const { post, translation } of report.translated) {
     console.log(`Translated ${post} into ${translation}`);
   }
-  if (values.stage && report.translated.length > 0) {
-    // In the pre-commit hook: the Translations go into the same commit as their Posts.
-    gitAdd(report.translated.map(({ translation }) => translation));
-  }
+  // In the pre-commit hook: every Translation matching a committed Post goes into the
+  // same commit, including one already fresh but not staged (written by `pnpm translate`).
+  const upToDate = [...report.translated, ...report.fresh];
+  if (values.stage && upToDate.length > 0) gitAdd(upToDate.map(({ translation }) => translation));
   if (report.unavailable.length > 0) {
     console.error(
       'Warning: these Posts were not translated. Run `pnpm translate` once Claude Code works; until then the Translation check fails.',
