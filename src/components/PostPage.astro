@@ -1,16 +1,13 @@
 ---
 import { render } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
-import { type Alternates, postPath, socialImagePath } from '../lib/i18n';
-import { getPostTags, type PostView } from '../lib/posts';
+import { postPath, socialImagePath } from '../lib/i18n';
+import { getPostTags, type PostPageContent } from '../lib/posts';
 import PostArticle from './PostArticle.astro';
 
 // A Post's page: `/<slug>/` in French, `/en/<slug>/` for its Translation.
 
-interface Props {
-  view: PostView;
-  alternates: Alternates | undefined;
-}
+type Props = PostPageContent;
 
 const { view, alternates } = Astro.props;
 const { locale, post, entry } = view;

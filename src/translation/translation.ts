@@ -25,11 +25,16 @@ export interface English {
   body: string;
 }
 
+/** Why a translator could not translate a Post: Claude Code missing, not logged in, … */
+export interface Unavailable {
+  unavailable: string;
+}
+
 /**
  * The translator adapter: takes a French Post file's full contents and returns its
- * English, or `{ unavailable: reason }` when it cannot translate (never throws for that).
+ * English, or `Unavailable` when it cannot translate (never throws for that).
  */
-export type Translator = (frenchPost: string) => Promise<English | { unavailable: string }>;
+export type Translator = (frenchPost: string) => Promise<English | Unavailable>;
 
 /** What `translatePosts` did; each Post keeps the status it had before translating. */
 export interface TranslationReport {

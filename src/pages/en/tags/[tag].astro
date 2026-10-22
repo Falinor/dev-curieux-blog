@@ -1,18 +1,14 @@
 ---
+import type { GetStaticPaths, InferGetStaticPropsType } from 'astro';
 import TagPage from '../../../components/TagPage.astro';
-import { getTagsIn, type PostView, type Tag } from '../../../lib/posts';
+import { getTagsIn } from '../../../lib/posts';
 
-export async function getStaticPaths() {
+export const getStaticPaths = (async () => {
   const tags = await getTagsIn('en');
-  return tags.map(({ tag, views }) => ({ params: { tag: tag.id }, props: { tag, views } }));
-}
+  return tags.map((props) => ({ params: { tag: props.tag.id }, props }));
+}) satisfies GetStaticPaths;
 
-interface Props {
-  tag: Tag;
-  views: PostView[];
-}
-
-const { tag, views } = Astro.props;
+type Props = InferGetStaticPropsType<typeof getStaticPaths>;
 ---
 
-<TagPage locale="en" tag={tag} views={views} />
+<TagPage locale="en" {...Astro.props} />

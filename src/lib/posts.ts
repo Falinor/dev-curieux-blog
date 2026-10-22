@@ -40,13 +40,17 @@ export async function getPostsIn(locale: Locale): Promise<PostView[]> {
   });
 }
 
-/**
- * Every Post page of a language, with the Post's paths in both languages when
- * it has a Translation (a Post without one has no English page).
- */
-export async function getPostPages(
-  locale: Locale,
-): Promise<{ view: PostView; alternates: Alternates | undefined }[]> {
+// The props of the Post and Tag page routes: types, not interfaces, which
+// `getStaticPaths()` rejects for lacking an index signature.
+
+/** What a Post page shows: the Post, and its paths in both languages when it has a Translation. */
+export type PostPageContent = {
+  view: PostView;
+  alternates: Alternates | undefined;
+};
+
+/** Every Post page of a language (a Post without a Translation has no English page). */
+export async function getPostPages(locale: Locale): Promise<PostPageContent[]> {
   const [views, translated] = await Promise.all([getPostsIn(locale), getPostsIn('en')]);
   const inEnglish = new Set(translated.map(({ post }) => post.id));
   return views.map((view) => {
@@ -58,12 +62,18 @@ export async function getPostPages(
   });
 }
 
+/** A Tag, with the Posts of a language that carry it, newest first. */
+export type TaggedPosts = {
+  tag: Tag;
+  views: PostView[];
+};
+
 /**
- * Every Tag, with the Posts of a language that carry it, newest first. Every
- * Tag gets a page in both languages, even with no Post yet (or only Drafts), so
- * every Tag page has its counterpart in the other language.
+ * Every Tag, with its Posts in a language. Every Tag gets a page in both
+ * languages, even with no Post yet (or only Drafts), so every Tag page has its
+ * counterpart in the other language.
  */
-export async function getTagsIn(locale: Locale): Promise<{ tag: Tag; views: PostView[] }[]> {
+export async function getTagsIn(locale: Locale): Promise<TaggedPosts[]> {
   const [tags, views] = await Promise.all([getCollection('tags'), getPostsIn(locale)]);
   return tags.map((tag) => ({
     tag,

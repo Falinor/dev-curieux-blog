@@ -4,7 +4,7 @@
 import { spawnSync, type SpawnSyncReturns } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
-import type { English, Translator } from './translation.ts';
+import type { English, Translator, Unavailable } from './translation.ts';
 
 /** The translation prompt, versioned with the code: fix bad English here, not in a Translation. */
 const PROMPT = fileURLToPath(new URL('prompt.md', import.meta.url));
@@ -69,11 +69,7 @@ export function claudeTranslator({ model }: { model?: string } = {}): Translator
 
 // The English in `claude -p --output-format json` output, or why there is none
 // (`is_error` with exit code 1 when not logged in, for instance).
-function english({
-  status,
-  stdout,
-  stderr,
-}: SpawnSyncReturns<string>): English | { unavailable: string } {
+function english({ status, stdout, stderr }: SpawnSyncReturns<string>): English | Unavailable {
   let output;
   try {
     output = JSON.parse(stdout);
