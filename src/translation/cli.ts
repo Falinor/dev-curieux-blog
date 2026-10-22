@@ -2,14 +2,14 @@
 //   check                         fails while a non-Draft Post has a stale or missing Translation
 //   translate [--stage] [post…]   translates the stale or missing Posts (all, or the given
 //                                 files); --stage also `git add`s their Translations
-// The content root is `BLOG_CONTENT_DIR`, as in `src/content.config.ts`.
+// The content root is `BLOG_CONTENT_DIR` (`src/lib/content-dir.ts`).
 // `TRANSLATION_MODEL` picks Claude Code's `--model` (default: the author's own default).
 import { spawnSync } from 'node:child_process';
 import { parseArgs } from 'node:util';
+import { contentDir } from '../lib/content-dir.ts';
 import { claudeTranslator } from './claude.ts';
 import { translatePosts, translationStatus } from './translation.ts';
 
-const contentDir = process.env.BLOG_CONTENT_DIR || 'src/content';
 const { positionals, values } = parseArgs({
   allowPositionals: true,
   options: { stage: { type: 'boolean', default: false } },
