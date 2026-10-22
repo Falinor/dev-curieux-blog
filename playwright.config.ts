@@ -25,17 +25,17 @@ const chromium: Project['use'] = {
 
 export default defineConfig({
   forbidOnly: !!process.env.CI,
-  webServer: sites.map(({ name, port }) => ({
-    command: `astro build --outDir dist-e2e/${name} && astro preview --ignore-lock --outDir dist-e2e/${name} --port ${port}`,
-    env: { BLOG_CONTENT_DIR: `tests/fixtures/${name}` },
-    url: `http://localhost:${port}`,
+  webServer: sites.map((site) => ({
+    command: `astro build --outDir dist-e2e/${site.name} && astro preview --ignore-lock --outDir dist-e2e/${site.name} --port ${site.port}`,
+    env: { BLOG_CONTENT_DIR: `tests/fixtures/${site.name}` },
+    url: `http://localhost:${site.port}`,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
   })),
-  projects: sites.map(({ name, port, testDir, testIgnore }) => ({
-    name: name === 'site' ? 'chromium' : `chromium ${name}`,
-    testDir,
-    testIgnore,
-    use: { ...chromium, baseURL: `http://localhost:${port}` },
+  projects: sites.map((site) => ({
+    name: site.name === 'site' ? 'chromium' : `chromium ${site.name}`,
+    testDir: site.testDir,
+    testIgnore: site.testIgnore,
+    use: { ...chromium, baseURL: `http://localhost:${site.port}` },
   })),
 });
