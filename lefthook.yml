@@ -3,6 +3,19 @@ output:
   - execution_out
   - failure
 
+pre-commit:
+  parallel: true
+  commands:
+    lint:
+      glob: '*.{js,ts,mjs,astro}'
+      run: pnpm oxlint {staged_files}
+    lint-astro:
+      glob: '*.astro'
+      run: pnpm eslint {staged_files}
+    format:
+      glob: '*.{js,ts,mjs,astro,css,json,jsonc,md,mdx,yml,yaml}'
+      run: pnpm prettier --write {staged_files} && git add {staged_files}
+
 commit-msg:
   commands:
     commitlint:
