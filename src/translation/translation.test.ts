@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
 import { mkdir, mkdtemp, readdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { spawnSync } from 'node:child_process';
 import { join } from 'node:path';
 import { test, type TestContext } from 'node:test';
 import { translatePosts, translationStatus, type Translator } from './translation.ts';
@@ -20,6 +20,7 @@ const PREMIER_POST_SHA256 = 'be38f3f756bcd1111b1f2eba5e440e2118052dbbb670928d6a6
 // The same Post after a title-only change.
 const REVISED_POST = PREMIER_POST.replace('title: Premier post', 'title: Premier post, revu');
 const REVISED_POST_SHA256 = '8f44f0887a7102ae1efa537ba62cc158b3424ca530b32e9388c9a83007ad8d7a';
+const DRAFT_POST = PREMIER_POST.replace('tags: [astro]', 'tags: [astro]\ndraft: true');
 
 // A Translation generated from the Post whose SHA-256 is `sourceHash`.
 const translation = (sourceHash: string) => `---
@@ -59,6 +60,23 @@ async function contentRoot(t: TestContext, posts: Record<string, string>): Promi
 }
 
 const readPost = (root: string, name: string) => readFile(join(root, 'posts', name), 'utf8');
+
+// Every file under `posts/` with its contents.
+async function snapshot(root: string): Promise<Record<string, string>> {
+  const names = await readdir(join(root, 'posts'));
+  return Object.fromEntries(
+    await Promise.all(names.map(async (name) => [name, await readPost(root, name)])),
+  );
+}
+
+// Runs the Translation command line on a content root, as CI and package scripts do.
+function cli(args: string[], contentDir: string) {
+  const script = join(import.meta.dirname, 'cli.ts');
+  return spawnSync(process.execPath, [script, ...args], {
+    env: { ...process.env, BLOG_CONTENT_DIR: contentDir },
+    encoding: 'utf8',
+  });
+}
 
 test('status reports a Post without a Translation as missing', async (t) => {
   const root = await contentRoot(t, { 'premier-post.mdx': PREMIER_POST });
@@ -100,10 +118,9 @@ test('a title-only change in a Post makes its Translation stale', async (t) => {
 });
 
 test('status never lists a Draft, with or without a Translation', async (t) => {
-  const draft = PREMIER_POST.replace('tags: [astro]', 'tags: [astro]\ndraft: true');
   const root = await contentRoot(t, {
-    'brouillon.mdx': draft,
-    'autre-brouillon.mdx': draft,
+    'brouillon.mdx': DRAFT_POST,
+    'autre-brouillon.mdx': DRAFT_POST,
     'autre-brouillon.en.mdx': translation(PREMIER_POST_SHA256),
     'premier-post.mdx': PREMIER_POST,
   });
@@ -123,7 +140,7 @@ test('translate sends only stale and missing Posts and writes their new fingerpr
     'modifie.mdx': REVISED_POST,
     'modifie.en.mdx': translation(PREMIER_POST_SHA256),
     'nouveau.mdx': PREMIER_POST,
-    'brouillon.mdx': PREMIER_POST.replace('tags: [astro]', 'tags: [astro]\ndraft: true'),
+    'brouillon.mdx': DRAFT_POST,
   });
   const { translator, received } = fakeTranslator();
 
@@ -145,7 +162,7 @@ test('translate given Post files sends only those that are stale or missing, onc
     'pas-demande.mdx': REVISED_POST,
     'deja-traduit.mdx': PREMIER_POST,
     'deja-traduit.en.mdx': translation(PREMIER_POST_SHA256),
-    'brouillon.mdx': PREMIER_POST.replace('tags: [astro]', 'tags: [astro]\ndraft: true'),
+    'brouillon.mdx': DRAFT_POST,
   });
   const { translator, received } = fakeTranslator();
   const post = (name: string) => join(root, 'posts', name);
@@ -199,23 +216,6 @@ test('an unavailable translator leaves every file untouched and is reported, not
   );
 });
 
-// Every file under `posts/` with its contents.
-async function snapshot(root: string): Promise<Record<string, string>> {
-  const names = await readdir(join(root, 'posts'));
-  return Object.fromEntries(
-    await Promise.all(names.map(async (name) => [name, await readPost(root, name)])),
-  );
-}
-
-// Runs the Translation command line on a content root, as CI and package scripts do.
-function cli(args: string[], contentDir: string) {
-  const script = join(import.meta.dirname, 'cli.ts');
-  return spawnSync(process.execPath, [script, ...args], {
-    env: { ...process.env, BLOG_CONTENT_DIR: contentDir },
-    encoding: 'utf8',
-  });
-}
-
 test('check exits non-zero naming every Post with a stale or missing Translation', async (t) => {
   const root = await contentRoot(t, {
     'nouveau.mdx': PREMIER_POST,
@@ -223,7 +223,7 @@ test('check exits non-zero naming every Post with a stale or missing Translation
     'deja-traduit.en.mdx': translation(PREMIER_POST_SHA256),
     'modifie.mdx': REVISED_POST,
     'modifie.en.mdx': translation(PREMIER_POST_SHA256),
-    'brouillon.mdx': PREMIER_POST.replace('tags: [astro]', 'tags: [astro]\ndraft: true'),
+    'brouillon.mdx': DRAFT_POST,
   });
 
   const { status, stderr } = cli(['check'], root);
@@ -244,7 +244,7 @@ test('check exits zero when every non-Draft Post has a fresh Translation', async
   const root = await contentRoot(t, {
     'deja-traduit.mdx': PREMIER_POST,
     'deja-traduit.en.mdx': translation(PREMIER_POST_SHA256),
-    'brouillon.mdx': PREMIER_POST.replace('tags: [astro]', 'tags: [astro]\ndraft: true'),
+    'brouillon.mdx': DRAFT_POST,
   });
 
   const { status, stderr } = cli(['check'], root);
