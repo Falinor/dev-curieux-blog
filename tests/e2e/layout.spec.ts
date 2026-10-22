@@ -28,3 +28,22 @@ for (const path of pages) {
     );
   });
 }
+
+for (const path of pages) {
+  test(`the footer of ${path} links to the legal notice and privacy policy on curieux.dev`, async ({
+    page,
+  }) => {
+    await page.goto(path);
+
+    const footer = page.getByRole('contentinfo');
+    await expect(footer.getByRole('link', { name: 'Mentions légales' })).toHaveAttribute(
+      'href',
+      'https://curieux.dev/mentions-legales',
+    );
+    await expect(footer.getByRole('link', { name: 'Confidentialité' })).toHaveAttribute(
+      'href',
+      'https://curieux.dev/confidentialite',
+    );
+    await expect(footer.getByText('codé au rythme des marées')).toBeVisible();
+  });
+}
