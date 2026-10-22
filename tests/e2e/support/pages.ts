@@ -10,6 +10,5 @@ export async function builtPages(testInfo: TestInfo): Promise<string[]> {
   const files = await readdir(outDir, { recursive: true });
   return files
     .filter((file) => file.endsWith('.html'))
-    .map((file) => `/${file.replace(/index\.html$/, '')}`)
-    .sort();
+    .map((file) => `/${file.replace(/index\.html$/, '')}`);
 }
