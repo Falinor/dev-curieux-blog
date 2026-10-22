@@ -12,6 +12,10 @@ interface Props {
 const { post } = Astro.props;
 const { title, description, publishedAt, updatedAt } = post.data;
 const tags = await getPostTags(post);
+
+// Where readers can react. The address is shown as text, not as a link.
+const linkedin = 'https://www.linkedin.com/in/andrea-gueugnaut/';
+const email = 'contact@curieux.dev';
 ---
 
 <article>
@@ -42,6 +46,14 @@ const tags = await getPostTags(post);
   </header>
   <div class="sheet">
     <slot />
+    <section class="react" aria-labelledby="reagir">
+      <h2 id="reagir">Réagir</h2>
+      <p>Une remarque, une erreur, une idée&nbsp;? Écrivez-moi.</p>
+      <p class="contact">
+        <a href={linkedin}>LinkedIn</a>
+        <span class="email">{email}</span>
+      </p>
+    </section>
   </div>
 </article>
 
@@ -150,6 +162,42 @@ const tags = await getPostTags(post);
     padding: 0;
     background: none;
     font-size: inherit;
+  }
+
+  .react {
+    margin-top: 48px;
+    padding-top: 20px;
+    border-top: 2px dotted var(--rule);
+  }
+  .react h2 {
+    margin: 0;
+    font-size: 1.3rem;
+  }
+  .react p {
+    margin: 6px 0 0;
+  }
+  .contact {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px 18px;
+  }
+  .contact a {
+    padding: 4px 14px;
+    background: var(--coral);
+    color: var(--on-sun);
+    border: var(--outline);
+    box-shadow: var(--shadow-sm);
+    font-weight: 700;
+    text-decoration: none;
+  }
+  .contact a:hover {
+    text-decoration: underline;
+  }
+  /* One click selects the whole address, ready to copy. */
+  .email {
+    font-family: var(--font-mono);
+    user-select: all;
   }
 
   .sheet :global(img) {

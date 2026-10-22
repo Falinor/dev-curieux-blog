@@ -151,6 +151,24 @@ test('an image next to a Post is optimized by Astro and fits the sheet', async (
   expect(box!.height / box!.width, 'the image keeps its proportions').toBeCloseTo(0.5, 2);
 });
 
+test('a Post ends with a « Réagir » block: a LinkedIn link and the email address as text', async ({
+  page,
+}) => {
+  await page.goto('/premier-post/');
+  const react = page.getByRole('article').getByRole('region', { name: 'Réagir' });
+
+  await expect(react.getByRole('link', { name: 'LinkedIn' })).toHaveAttribute(
+    'href',
+    'https://www.linkedin.com/in/andrea-gueugnaut/',
+  );
+  await expect(react.getByText('contact@curieux.dev', { exact: true })).toBeVisible();
+  await expect(react.getByRole('link'), 'the email address is not a link').toHaveCount(1);
+
+  const body = await page.getByText('Ceci est le corps du premier Post').boundingBox();
+  const block = await react.boundingBox();
+  expect(block!.y, 'after the body').toBeGreaterThan(body!.y + body!.height);
+});
+
 test('a Post page without an update date shows no update line, and every Tag by its French label', async ({
   page,
 }) => {
