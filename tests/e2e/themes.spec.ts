@@ -164,7 +164,7 @@ for (const [theme, colorScheme] of [
       test(`at ${width}px, every focus ring of every page stands out 3:1 from what lies behind it`, async ({
         page,
       }, testInfo) => {
-        // Two screenshots per focus stop of every page: about 15 s here.
+        // A screenshot per focus stop of every page: about 25 s for 20 pages here.
         test.slow();
         // Still waves: the screenshots compared must differ only by the ring.
         await page.emulateMedia({ reducedMotion: 'reduce' });

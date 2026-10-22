@@ -7,15 +7,34 @@ export interface WeakFocusRing {
   ratios: number[];
 }
 
+interface Box {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
 /**
  * Tabs through the whole page and returns every focus indicator that does not
  * stand out from what lies behind it: on each of eight rays from its centre
- * outwards, some pixel must change by a contrast of at least 3:1 between the
- * focused and unfocused page (WCAG 1.4.11). A two-tone ring passes as long as
- * one of its tones does, wherever it sits. The viewport must hold the whole
- * page, so focusing never scrolls.
+ * outwards, some pixel must change by a contrast of at least 3:1 from the page
+ * with nothing focused (WCAG 1.4.11). A two-tone ring passes as long as one of
+ * its tones does, wherever it sits. The viewport must hold the whole page, so
+ * focusing never scrolls, and nothing may move on its own.
  */
 export async function weakFocusRings(page: Page): Promise<WeakFocusRing[]> {
+  await page.evaluate(() => document.fonts.ready);
+  const baseline = await page.screenshot({ animations: 'disabled' });
+  // Kept in the page, decoded once: each focused screenshot is compared with it.
+  await page.evaluate(async (png) => {
+    const response = await fetch(`data:image/png;base64,${png}`);
+    const bitmap = await createImageBitmap(await response.blob());
+    const canvas = new OffscreenCanvas(bitmap.width, bitmap.height);
+    const context = canvas.getContext('2d')!;
+    context.drawImage(bitmap, 0, 0);
+    Reflect.set(window, 'unfocusedPage', context.getImageData(0, 0, bitmap.width, bitmap.height));
+  }, baseline.toString('base64'));
+
   const weak: WeakFocusRing[] = [];
   for (let step = 0; step < 200; step++) {
     await page.keyboard.press('Tab');
@@ -36,36 +55,17 @@ export async function weakFocusRings(page: Page): Promise<WeakFocusRing[]> {
     });
     if (!target) break;
 
-    const margin = 16;
-    const viewport = page.viewportSize()!;
-    const x = Math.max(0, Math.floor(target.box.x - margin));
-    const y = Math.max(0, Math.floor(target.box.y - margin));
-    const clip = {
-      x,
-      y,
-      width: Math.min(viewport.width, Math.ceil(target.box.x + target.box.width + margin)) - x,
-      height: Math.min(viewport.height, Math.ceil(target.box.y + target.box.height + margin)) - y,
-    };
+    const clip = around(target.box, page.viewportSize()!);
     const focused = await page.screenshot({ clip, animations: 'disabled' });
-    await page.evaluate(() => (document.activeElement as HTMLElement).blur());
-    const unfocused = await page.screenshot({ clip, animations: 'disabled' });
-
-    const centre = {
-      x: target.box.x + target.box.width / 2 - clip.x,
-      y: target.box.y + target.box.height / 2 - clip.y,
-    };
     const ratios = await page.evaluate(
-      async ({ pngs, from }) => {
-        const [after, before] = await Promise.all(
-          pngs.map(async (png) => {
-            const response = await fetch(`data:image/png;base64,${png}`);
-            const bitmap = await createImageBitmap(await response.blob());
-            const canvas = new OffscreenCanvas(bitmap.width, bitmap.height);
-            const context = canvas.getContext('2d')!;
-            context.drawImage(bitmap, 0, 0);
-            return context.getImageData(0, 0, bitmap.width, bitmap.height);
-          }),
-        );
+      async ({ png, area, box }) => {
+        const response = await fetch(`data:image/png;base64,${png}`);
+        const bitmap = await createImageBitmap(await response.blob());
+        const canvas = new OffscreenCanvas(bitmap.width, bitmap.height);
+        const context = canvas.getContext('2d')!;
+        context.drawImage(bitmap, 0, 0);
+        const after = context.getImageData(0, 0, bitmap.width, bitmap.height);
+        const before = Reflect.get(window, 'unfocusedPage') as ImageData;
 
         // Runs in the page: its helpers must live inside it.
         // oxlint-disable-next-line unicorn/consistent-function-scoping
@@ -77,6 +77,7 @@ export async function weakFocusRings(page: Page): Promise<WeakFocusRing[]> {
           return 0.2126 * r + 0.7152 * g + 0.0722 * b;
         };
 
+        const centre = { x: box.x + box.width / 2 - area.x, y: box.y + box.height / 2 - area.y };
         const directions = [
           [1, 0],
           [1, 1],
@@ -90,19 +91,32 @@ export async function weakFocusRings(page: Page): Promise<WeakFocusRing[]> {
         return directions.map(([dx, dy]) => {
           let best = 1;
           for (let t = 0; ; t++) {
-            const px = Math.round(from.x + dx * t);
-            const py = Math.round(from.y + dy * t);
-            if (px < 0 || py < 0 || px >= after!.width || py >= after!.height) break;
-            const i = (py * after!.width + px) * 4;
-            const [a, b] = [luminance(after!.data, i), luminance(before!.data, i)];
+            const px = Math.round(centre.x + dx * t);
+            const py = Math.round(centre.y + dy * t);
+            if (px < 0 || py < 0 || px >= after.width || py >= after.height) break;
+            const a = luminance(after.data, (py * after.width + px) * 4);
+            const b = luminance(before.data, ((area.y + py) * before.width + area.x + px) * 4);
             best = Math.max(best, (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05));
           }
           return Math.round(best * 100) / 100;
         });
       },
-      { pngs: [focused.toString('base64'), unfocused.toString('base64')], from: centre },
+      { png: focused.toString('base64'), area: clip, box: target.box },
     );
     if (ratios.some((ratio) => ratio < 3)) weak.push({ element: target.element, ratios });
   }
   return weak;
+}
+
+/** The box with a margin for the ring, in whole pixels, inside the viewport. */
+function around(box: Box, viewport: { width: number; height: number }): Box {
+  const margin = 16;
+  const x = Math.max(0, Math.floor(box.x - margin));
+  const y = Math.max(0, Math.floor(box.y - margin));
+  return {
+    x,
+    y,
+    width: Math.min(viewport.width, Math.ceil(box.x + box.width + margin)) - x,
+    height: Math.min(viewport.height, Math.ceil(box.y + box.height + margin)) - y,
+  };
 }
