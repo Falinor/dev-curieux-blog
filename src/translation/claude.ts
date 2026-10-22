@@ -1,7 +1,7 @@
 // The real translator adapter (ADR 0002): Claude Code in non-interactive mode
 // (`claude -p`) on the author's own subscription, so no API key is needed.
 // Automated tests only use a stand-in `claude`; the author checks this one by hand.
-import { spawnSync } from 'node:child_process';
+import { spawnSync, type SpawnSyncReturns } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import type { English, Translator } from './translation.ts';
@@ -63,17 +63,17 @@ export function claudeTranslator({ model }: { model?: string } = {}): Translator
       return { unavailable: `claude gave no answer within ${TIMEOUT_MINUTES} minutes` };
     }
     if (run.error) return { unavailable: `claude could not run: ${run.error.message}` };
-    return english(run.status, run.stdout, run.stderr);
+    return english(run);
   };
 }
 
 // The English in `claude -p --output-format json` output, or why there is none
 // (`is_error` with exit code 1 when not logged in, for instance).
-function english(
-  status: number | null,
-  stdout: string,
-  stderr: string,
-): English | { unavailable: string } {
+function english({
+  status,
+  stdout,
+  stderr,
+}: SpawnSyncReturns<string>): English | { unavailable: string } {
   let output;
   try {
     output = JSON.parse(stdout);
@@ -85,7 +85,11 @@ function english(
       unavailable: firstLine(String(output.result ?? '')) || `claude exited with code ${status}`,
     };
   }
-  const { title, description, body } = output.structured_output;
+  const { title, description, body } = output.structured_output ?? {};
+  // A Translation needs all three: an empty one would ship a blank page.
+  if (![title, description, body].every((field) => typeof field === 'string' && field.trim())) {
+    return { unavailable: 'claude answered without a title, description or body' };
+  }
   return { title, description, body };
 }
 
