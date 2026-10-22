@@ -126,6 +126,31 @@ test('a code block is a card highlighted in the brand colors, and a long line sc
   ).toBe(true);
 });
 
+test('an image next to a Post is optimized by Astro and fits the sheet', async ({ page }) => {
+  await page.setViewportSize({ width: 400, height: 800 });
+  await page.goto('/troisieme-post/');
+  const image = page
+    .getByRole('article')
+    .getByRole('img', { name: 'Le soleil se couche derrière les vagues' });
+
+  await expect(image).toHaveAttribute('src', /^\/_astro\/coucher-de-soleil\.[\w-]+\.webp$/);
+  // Smaller files for smaller screens, and a reserved box: no layout shift.
+  await expect(image).toHaveAttribute('srcset', /\.webp \d+w,/);
+  await expect(image).toHaveAttribute('sizes', /.+/);
+  await expect(image).toHaveAttribute('width', '1600');
+  await expect(image).toHaveAttribute('height', '800');
+
+  await image.scrollIntoViewIfNeeded();
+  await expect
+    .poll(() => image.evaluate((img: HTMLImageElement) => img.naturalWidth))
+    .toBeGreaterThan(0);
+  const sheet = await cardAround(page.getByText('Une traduction faite à la main'));
+  const box = await image.boundingBox();
+  expect(box!.x, 'the image fits the sheet').toBeGreaterThanOrEqual(sheet!.left);
+  expect(box!.x + box!.width, 'the image fits the sheet').toBeLessThanOrEqual(sheet!.right);
+  expect(box!.height / box!.width, 'the image keeps its proportions').toBeCloseTo(0.5, 2);
+});
+
 test('a Post page without an update date shows no update line, and every Tag by its French label', async ({
   page,
 }) => {

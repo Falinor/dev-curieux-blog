@@ -22,6 +22,8 @@ export default defineConfig({
   site: 'https://blog.curieux.dev',
   integrations: [mdx()],
   markdown: { shikiConfig: { theme: codeTheme } },
+  // Images in a Post get a `srcset`, so phones download smaller files.
+  image: { layout: 'constrained' },
   fonts: [
     fontsource(
       'Bricolage Grotesque',

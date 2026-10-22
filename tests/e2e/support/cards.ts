@@ -9,6 +9,8 @@ export interface Card {
   transform: string;
   top: number;
   bottom: number;
+  left: number;
+  right: number;
 }
 
 /**
@@ -20,7 +22,7 @@ export function cardAround(element: Locator): Promise<Card | null> {
     for (let box: Element | null = node; box; box = box.parentElement) {
       const style = getComputedStyle(box);
       if (style.boxShadow === 'none') continue;
-      const { top, bottom } = box.getBoundingClientRect();
+      const { top, bottom, left, right } = box.getBoundingClientRect();
       return {
         outline: `${style.borderTopWidth} ${style.borderTopStyle} ${style.borderTopColor}`,
         shadow: style.boxShadow,
@@ -28,6 +30,8 @@ export function cardAround(element: Locator): Promise<Card | null> {
         transform: style.transform,
         top,
         bottom,
+        left,
+        right,
       };
     }
     return null;

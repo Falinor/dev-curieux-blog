@@ -152,6 +152,12 @@ const tags = await getPostTags(post);
     font-size: inherit;
   }
 
+  .sheet :global(img) {
+    display: block;
+    max-width: 100%;
+    height: auto;
+  }
+
   /* Quotes are postcards: a tilted sun card. */
   .sheet :global(blockquote) {
     margin-inline: 0;
