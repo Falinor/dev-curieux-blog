@@ -10,6 +10,7 @@ const posts = defineCollection({
   loader: glob({ pattern: '*.mdx', base: `${contentDir}/posts` }),
   schema: z.object({
     title: z.string(),
+    draft: z.boolean().default(false),
   }),
 });
 
