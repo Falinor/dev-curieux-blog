@@ -1,4 +1,5 @@
 import { test, expect, type APIRequestContext, type Page } from '@playwright/test';
+import { builtPages } from './support/pages';
 
 // The RSS feeds: `/rss.xml` lists the French Posts, `/en/rss.xml` the
 // Translations. In the fixture site, the Draft `brouillon` is the newest Post
@@ -132,4 +133,20 @@ test('/en/rss.xml is a valid RSS 2.0 feed of the Translations, newest first, wit
     pubDate: 'Tue, 01 Sep 2026 00:00:00 GMT',
     categories: ['Product', 'Astro'],
   });
+});
+
+test('every page points feed readers to the feed of its language', async ({ page }, testInfo) => {
+  for (const path of await builtPages(testInfo)) {
+    await page.goto(path);
+    const english = path.startsWith('/en/');
+
+    const feeds = await page
+      .locator('head link[rel="alternate"][type="application/rss+xml"]')
+      .evaluateAll((links) =>
+        links.map((link) => [link.getAttribute('title'), link.getAttribute('href')]),
+      );
+    expect(feeds, path).toEqual([
+      english ? ['Dev curieux — the blog', '/en/rss.xml'] : ['Dev curieux — le blog', '/rss.xml'],
+    ]);
+  }
 });

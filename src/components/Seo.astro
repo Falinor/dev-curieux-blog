@@ -1,16 +1,19 @@
 ---
 import {
   type Alternates,
+  feedPath,
   homePath,
   type Locale,
   otherLocale,
   pageLocale,
   socialImagePath,
+  ui,
 } from '../lib/i18n';
 
-// What search engines and link previews read in a page's head: its title and
-// description, its canonical URL on blog.curieux.dev, its other-language
-// version, and the Open Graph and Twitter card tags of its preview.
+// What search engines, link previews and feed readers read in a page's head:
+// its title and description, its canonical URL on blog.curieux.dev, its
+// other-language version, the Open Graph and Twitter card tags of its preview,
+// and the RSS feed of its language.
 
 /** A Post page: the Post as link previews describe it. */
 export interface Article {
@@ -86,6 +89,12 @@ const blogPosting = article && {
 {hreflangs.map(({ hreflang, href }) => (
   <link rel="alternate" hreflang={hreflang} href={href} />
 ))}
+<link
+  rel="alternate"
+  type="application/rss+xml"
+  title={ui[locale].home.title}
+  href={feedPath(locale)}
+/>
 {!noindex && (
   <>
     <meta property="og:type" content={article ? 'article' : 'website'} />
