@@ -1,0 +1,16 @@
+---
+import { themeStorageKey } from '../lib/theme';
+
+// Applies the reader's stored theme before the first paint, so a page never
+// flashes the other theme: render it first in `<head>`, inline and blocking.
+// Without a stored choice (or without storage), `tokens.css` follows the system.
+---
+
+<script is:inline define:vars={{ themeStorageKey }}>
+  try {
+    const theme = localStorage.getItem(themeStorageKey);
+    if (theme === 'light' || theme === 'dark') document.documentElement.dataset.theme = theme;
+  } catch {
+    // Storage is blocked (private mode, site data refused): follow the system.
+  }
+</script>

@@ -82,6 +82,10 @@ test('keyboard focus moves from the header to the postcards and is always visibl
   }
 
   await page.keyboard.press('Tab');
+  await expect(page.getByRole('button', { name: 'Passer en plein soleil' })).toBeFocused();
+  expect(await outlineOf(':focus')).toBe('solid');
+
+  await page.keyboard.press('Tab');
   await expect(page.getByRole('link', { name: 'Un Post épinglé récent' })).toBeFocused();
   // The postcard, the link's whole hit area, carries the focus ring.
   expect(await outlineOf('li:focus-within')).toBe('solid');

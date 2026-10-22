@@ -30,3 +30,30 @@ test.describe('with a light system setting and no stored choice', () => {
     });
   }
 });
+
+test.describe('the theme toggle', () => {
+  test.use({ colorScheme: 'dark' });
+
+  test('switches between « crépuscule » and « plein soleil »', async ({ page }) => {
+    await page.goto('/');
+
+    await page.getByRole('button', { name: 'Passer en plein soleil' }).click();
+    await expect(badge(page)).toHaveCSS('background-color', card.pleinSoleil);
+
+    await page.getByRole('button', { name: 'Passer au crépuscule' }).click();
+    await expect(badge(page)).toHaveCSS('background-color', card.crepuscule);
+  });
+
+  test('the chosen theme persists across navigation and reload', async ({ page }) => {
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Passer en plein soleil' }).click();
+
+    await page.getByRole('link', { name: 'Mon premier Post' }).click();
+    await expect(page).toHaveURL('/premier-post/');
+    await expect(badge(page)).toHaveCSS('background-color', card.pleinSoleil);
+    await expect(page.getByRole('button', { name: 'Passer au crépuscule' })).toBeVisible();
+
+    await page.reload();
+    await expect(badge(page)).toHaveCSS('background-color', card.pleinSoleil);
+  });
+});
