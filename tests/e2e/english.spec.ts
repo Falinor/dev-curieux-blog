@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { cardAround } from './support/cards';
+import { builtPages } from './support/pages';
 import { homePostcards } from './support/postcards';
 
 // The English mirror under `/en/`, built from the fixture Translations
@@ -117,4 +118,28 @@ test('an English Tag page is titled with the English label and lists the transla
   const posts = page.getByRole('main').getByRole('link');
   await expect(posts).toHaveText(['A third post', 'A recent pinned post', 'An old pinned post']);
   await expect(posts.first()).toHaveAttribute('href', '/en/troisieme-post/');
+});
+
+test('a Post without a Translation, and a Draft with one, appear on no English page', async ({
+  page,
+}, testInfo) => {
+  const english = (await builtPages(testInfo)).filter((path) => path.startsWith('/en/'));
+  expect(english).toEqual(expect.arrayContaining(['/en/', '/en/tags/astro/', '/en/premier-post/']));
+
+  for (const path of english) {
+    await page.goto(path);
+    // Neither in English nor in French: no fallback to the French Post.
+    for (const title of ['Un second Post', 'A draft post', 'Un Post en brouillon']) {
+      await expect(page.getByText(title), `${title} on ${path}`).toHaveCount(0);
+    }
+    await expect(page.locator('a[href*="second-post"], a[href*="brouillon"]')).toHaveCount(0);
+  }
+});
+
+test('a Post without a Translation, and a Draft with one, have no English page', async ({
+  request,
+}) => {
+  for (const path of ['/en/second-post/', '/en/brouillon/']) {
+    expect((await request.get(path)).status(), path).toBe(404);
+  }
 });
