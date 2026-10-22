@@ -1,6 +1,7 @@
 import { defineConfig, envField, fontProviders } from 'astro/config';
 import mdx from '@astrojs/mdx';
 import sitemap from '@astrojs/sitemap';
+import { defaultLocale, locales } from './src/lib/i18n.ts';
 import { codeTheme } from './src/styles/code-theme.ts';
 
 /**
@@ -25,12 +26,17 @@ export default defineConfig({
   // English route is a file under `src/pages/en/`, and there is no fallback, so
   // an English page never shows French content. `Astro.currentLocale` tells a
   // page its language.
-  i18n: { defaultLocale: 'fr', locales: ['fr', 'en'], routing: { prefixDefaultLocale: false } },
+  i18n: { defaultLocale, locales: [...locales], routing: { prefixDefaultLocale: false } },
   integrations: [
     mdx(),
     // `/sitemap-index.xml`: every built page (no Draft has one), each paired
     // with its other-language version, matched by path under `/en/`.
-    sitemap({ i18n: { defaultLocale: 'fr', locales: { fr: 'fr', en: 'en' } } }),
+    sitemap({
+      i18n: {
+        defaultLocale,
+        locales: Object.fromEntries(locales.map((locale) => [locale, locale])),
+      },
+    }),
   ],
   markdown: { shikiConfig: { theme: codeTheme } },
   // Images in a Post get a `srcset`, so phones download smaller files.

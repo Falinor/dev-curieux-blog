@@ -4,6 +4,8 @@
 
 export const locales = ['fr', 'en'] as const;
 export type Locale = (typeof locales)[number];
+/** The language Posts are written in, served at the root. */
+export const defaultLocale: Locale = 'fr';
 
 /** The language of the page being built, from `Astro.currentLocale`. */
 export function pageLocale(currentLocale: string | undefined): Locale {
