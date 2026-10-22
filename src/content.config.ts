@@ -33,7 +33,9 @@ const tags = defineCollection({
 
 const posts = defineCollection({
   loader: glob({ pattern: ['*.mdx', '!*.en.mdx'], base: `${contentDir}/posts` }),
-  schema: z.object({
+  // Strict: a misspelled field (`drafts: true`) fails the build instead of being
+  // dropped, which would publish a Draft.
+  schema: z.strictObject({
     title: z.string(),
     // Used for SEO, RSS, social images and postcards.
     description: z.string(),
