@@ -1,0 +1,30 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+
+// Postcards in reading order, at most two per row: one on phones. Its
+// children are `Postcard`s.
+
+type Props = HTMLAttributes<'ol'>;
+
+const { class: className, ...rest } = Astro.props;
+---
+
+<ol class:list={['postcards', className]} {...rest}>
+  <slot />
+</ol>
+
+<style>
+  .postcards {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 34px 28px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  @media (min-width: 720px) {
+    .postcards {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+</style>

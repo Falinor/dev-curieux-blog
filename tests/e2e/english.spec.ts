@@ -109,7 +109,7 @@ test('an English Post renders its body like a French one, with the images next t
   await expect(image).toHaveAttribute('srcset', /\.webp \d+w,/);
 });
 
-test('an English Tag page is titled with the English label and lists the translated Posts with that Tag, newest first', async ({
+test('an English Tag page is titled with the English label and shows the translated Posts with that Tag as postcards, newest first', async ({
   page,
 }) => {
   await page.goto('/en/tags/outillage/');
@@ -119,6 +119,12 @@ test('an English Tag page is titled with the English label and lists the transla
   const posts = page.getByRole('main').getByRole('link');
   await expect(posts).toHaveText(['A third post', 'A recent pinned post', 'An old pinned post']);
   await expect(posts.first()).toHaveAttribute('href', '/en/troisieme-post/');
+  const postcard = page
+    .getByRole('listitem')
+    .filter({ has: page.getByRole('heading', { name: 'A third post' }) });
+  await expect(postcard.getByText('5 October 2026')).toBeVisible();
+  await expect(postcard.getByText('1 min read')).toBeVisible();
+  await expect(postcard.getByText('Tooling', { exact: true })).toBeVisible();
 });
 
 test('a Post without a Translation, and a Draft with one, appear on no English page', async ({

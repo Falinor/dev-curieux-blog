@@ -3,6 +3,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import { homePath, type Locale, ui } from '../lib/i18n';
 import { getPostsIn, homeLayout } from '../lib/posts';
 import Postcard from './Postcard.astro';
+import PostcardGrid from './PostcardGrid.astro';
 
 // A home page: `/` in French, `/en/` in English, with the same ordering rules.
 
@@ -32,14 +33,14 @@ const { topSlot, others } = homeLayout(await getPostsIn(locale));
   <main class="page">
     <section id="posts" aria-labelledby="posts-title">
       <h2 id="posts-title">{text.posts}</h2>
-      <ol class="postcards">
+      <PostcardGrid>
         {topSlot.map((view) => (
           <Postcard view={view} topSlot />
         ))}
         {others.map((view) => (
           <Postcard view={view} />
         ))}
-      </ol>
+      </PostcardGrid>
     </section>
   </main>
 </BaseLayout>
@@ -81,19 +82,5 @@ const { topSlot, others } = homeLayout(await getPostsIn(locale));
     font-family: var(--font-display);
     font-size: 1.5rem;
     font-weight: 700;
-  }
-  /* At most two postcards per row: one on phones. */
-  .postcards {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    gap: 34px 28px;
-    margin: 0;
-    padding: 0;
-    list-style: none;
-  }
-  @media (min-width: 720px) {
-    .postcards {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
   }
 </style>
