@@ -1,0 +1,35 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { type Locale, postPath, ui } from '../lib/i18n';
+import type { PostView, Tag } from '../lib/posts';
+
+// A Tag's page: `/tags/<id>/` in French, `/en/tags/<id>/` in English, titled
+// with the Tag's label in that language. It lists the Posts that language's
+// pages show, newest first.
+
+interface Props {
+  locale: Locale;
+  tag: Tag;
+  views: PostView[];
+}
+
+const { locale, tag, views } = Astro.props;
+const label = tag.data[locale];
+---
+
+<BaseLayout title={`${label} — Dev curieux`}>
+  <main>
+    <h1>{label}</h1>
+    {views.length > 0 ? (
+      <ul>
+        {views.map(({ post, text }) => (
+          <li>
+            <a href={postPath(locale, post.id)}>{text.data.title}</a>
+          </li>
+        ))}
+      </ul>
+    ) : (
+      <p>{ui[locale].noPosts}</p>
+    )}
+  </main>
+</BaseLayout>

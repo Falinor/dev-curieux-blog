@@ -41,6 +41,19 @@ export async function getPostsIn(locale: Locale): Promise<PostView[]> {
 }
 
 /**
+ * Every Tag, with the Posts of a language that carry it, newest first. Every
+ * Tag gets a page in both languages, even with no Post yet (or only Drafts), so
+ * every Tag page has its counterpart in the other language.
+ */
+export async function getTagsIn(locale: Locale): Promise<{ tag: Tag; views: PostView[] }[]> {
+  const [tags, views] = await Promise.all([getCollection('tags'), getPostsIn(locale)]);
+  return tags.map((tag) => ({
+    tag,
+    views: views.filter(({ post }) => post.data.tags.some(({ id }) => id === tag.id)),
+  }));
+}
+
+/**
  * How a home page lays out Posts (already newest first, as `getPostsIn()`
  * returns them): the Pinned Posts are featured at the top, or the most recent
  * Post when nothing is pinned; the others follow.

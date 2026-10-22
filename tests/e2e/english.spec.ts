@@ -106,3 +106,15 @@ test('an English Post renders its body like a French one, with the images next t
   await expect(image).toHaveAttribute('src', /^\/_astro\/coucher-de-soleil\.[\w-]+\.webp$/);
   await expect(image).toHaveAttribute('srcset', /\.webp \d+w,/);
 });
+
+test('an English Tag page is titled with the English label and lists the translated Posts with that Tag, newest first', async ({
+  page,
+}) => {
+  await page.goto('/en/tags/outillage/');
+
+  await expect(page.locator('html')).toHaveAttribute('lang', 'en');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Tooling');
+  const posts = page.getByRole('main').getByRole('link');
+  await expect(posts).toHaveText(['A third post', 'A recent pinned post', 'An old pinned post']);
+  await expect(posts.first()).toHaveAttribute('href', '/en/troisieme-post/');
+});
