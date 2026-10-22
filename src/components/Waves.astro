@@ -1,26 +1,10 @@
 ---
+import { waveBox, waves } from '../lib/waves';
+
 // The sea at the bottom of the scene: three outlined waves, back to front. Each
 // is an SVG twice as wide as the scene whose curve repeats every half width, so
 // sliding it by half its width loops without a seam.
-const width = 2400;
-const height = 90;
-
-/** A closed wave shape: a curve of `wavelength` around `baseline`, filled below. */
-function wave(baseline: number, amplitude: number, wavelength: number): string {
-  // Quadratic segments: the control point sits twice the amplitude off the
-  // baseline, and `T` mirrors it for the next half wavelength.
-  let curve = `Q${wavelength / 4} ${baseline - 2 * amplitude} ${wavelength / 2} ${baseline}`;
-  for (let x = wavelength; x <= width; x += wavelength / 2) curve += ` T${x} ${baseline}`;
-  // The sides and bottom run just outside the view box, so their outline is clipped.
-  return `M-4 ${height + 4} L-4 ${baseline} L0 ${baseline} ${curve} L${width + 4} ${baseline} L${width + 4} ${height + 4} Z`;
-}
-
-// `wavelength` must divide `width / 2` for the loop to be seamless.
-const waves = [
-  { name: 'back', fill: 'var(--sea-4)', d: wave(34, 7, 300) },
-  { name: 'middle', fill: 'var(--sea-3)', d: wave(52, 9, 400) },
-  { name: 'front', fill: 'var(--sea-2)', d: wave(70, 5, 600) },
-];
+const { width, height } = waveBox;
 ---
 
 {waves.map(({ name, fill, d }) => (
@@ -30,7 +14,7 @@ const waves = [
     preserveAspectRatio="none"
     aria-hidden="true"
   >
-    <path d={d} fill={fill} />
+    <path d={d} fill={`var(--${fill})`} />
   </svg>
 ))}
 
