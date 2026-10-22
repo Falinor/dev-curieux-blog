@@ -7,6 +7,12 @@ const { featured, others } = homeLayout(await getPublishedPosts());
 ---
 
 <BaseLayout title="Dev curieux — le blog">
+  <div class="hero" slot="hero">
+    <h1>
+      Cartes postales d’un dev <span class="highlight">curieux</span>
+    </h1>
+    <p>Développeur fullstack freelance. Je construis, j’apprends, et j’écris ce que je découvre.</p>
+  </div>
   <main class="page">
     <section id="posts" aria-labelledby="posts-title">
       <h2 id="posts-title">Dernières nouvelles</h2>
@@ -23,6 +29,34 @@ const { featured, others } = homeLayout(await getPublishedPosts());
 </BaseLayout>
 
 <style>
+  .hero {
+    padding-top: 40px;
+  }
+  h1 {
+    max-width: 12ch;
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: clamp(2.4rem, 7vw, 4.6rem);
+    font-weight: 800;
+    line-height: 0.98;
+    letter-spacing: -0.035em;
+  }
+  /* A sticker on the word that names the blog. */
+  .highlight {
+    display: inline-block;
+    padding: 0 0.15em;
+    background: var(--sun);
+    color: var(--on-sun);
+    border: var(--outline);
+    box-shadow: var(--shadow-sm);
+    transform: rotate(-2deg);
+  }
+  .hero p {
+    max-width: 34ch;
+    margin: 14px 0 0;
+    font-size: 1.1rem;
+  }
+
   section {
     padding-block: 40px 24px;
   }
