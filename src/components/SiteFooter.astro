@@ -1,16 +1,23 @@
 ---
-// The legal pages live on the landing page; they cover the blog too.
+import { pageLocale, ui } from '../lib/i18n';
+
+// The legal pages live on the landing page, in French; they cover the blog too.
 const year = new Date().getFullYear();
+const words = ui[pageLocale(Astro.currentLocale)];
 ---
 
 <footer class="page">
   <p>
     © {year} Dev curieux{' · '}
-    <a href="https://curieux.dev/mentions-legales">Mentions légales</a>
+    <a href="https://curieux.dev/mentions-legales" hreflang="fr">
+      {words.legalNotice}
+    </a>
     {' · '}
-    <a href="https://curieux.dev/confidentialite">Confidentialité</a>
+    <a href="https://curieux.dev/confidentialite" hreflang="fr">
+      {words.privacy}
+    </a>
   </p>
-  <p>codé au rythme des marées</p>
+  <p>{words.tagline}</p>
 </footer>
 
 <style>

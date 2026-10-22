@@ -2,25 +2,53 @@ import { test, expect } from '@playwright/test';
 
 test.use({ colorScheme: 'dark' });
 
-// The header and footer are the same on every page, the 404 page included.
-const pages = ['/', '/premier-post/', '/tags/astro/', '/page-inconnue/'];
+// The header and footer are the same on every page of a language, the 404 page
+// included, with links that stay in that language.
+const chrome = {
+  fr: {
+    home: '/',
+    navigation: 'Navigation principale',
+    posts: '/#posts',
+    feed: '/rss.xml',
+    legalNotice: 'Mentions légales',
+    privacy: 'Confidentialité',
+    tagline: 'codé au rythme des marées',
+  },
+  en: {
+    home: '/en/',
+    navigation: 'Main navigation',
+    posts: '/en/#posts',
+    feed: '/en/rss.xml',
+    legalNotice: 'Legal notice',
+    privacy: 'Privacy',
+    tagline: 'coded to the rhythm of the tides',
+  },
+};
+const french = ['/', '/premier-post/', '/tags/astro/', '/page-inconnue/'];
+const english = ['/en/', '/en/premier-post/', '/en/tags/astro/'];
+const pages = [...french, ...english];
+const wordsOf = (path: string) => chrome[path.startsWith('/en/') ? 'en' : 'fr'];
 
 for (const path of pages) {
   test(`the header of ${path} links home from the badge, and to the Posts, the RSS feed and curieux.dev`, async ({
     page,
   }) => {
+    const words = wordsOf(path);
     await page.goto(path);
 
     const header = page.getByRole('banner');
-    await expect(header.getByRole('link', { name: 'Dev curieux' })).toHaveAttribute('href', '/');
-    const nav = header.getByRole('navigation');
+    await expect(header.getByRole('link', { name: 'Dev curieux' })).toHaveAttribute(
+      'href',
+      words.home,
+    );
+    const nav = header.getByRole('navigation', { name: words.navigation });
     await expect(nav.getByRole('link', { name: 'Posts', exact: true })).toHaveAttribute(
       'href',
-      '/#posts',
+      words.posts,
     );
     await expect(nav.getByRole('link', { name: 'RSS', exact: true })).toHaveAttribute(
       'href',
-      '/rss.xml',
+      words.feed,
     );
     await expect(nav.getByRole('link', { name: 'curieux.dev', exact: true })).toHaveAttribute(
       'href',
@@ -33,18 +61,19 @@ for (const path of pages) {
   test(`the footer of ${path} links to the legal notice and privacy policy on curieux.dev`, async ({
     page,
   }) => {
+    const words = wordsOf(path);
     await page.goto(path);
 
     const footer = page.getByRole('contentinfo');
-    await expect(footer.getByRole('link', { name: 'Mentions légales' })).toHaveAttribute(
+    await expect(footer.getByRole('link', { name: words.legalNotice })).toHaveAttribute(
       'href',
       'https://curieux.dev/mentions-legales',
     );
-    await expect(footer.getByRole('link', { name: 'Confidentialité' })).toHaveAttribute(
+    await expect(footer.getByRole('link', { name: words.privacy })).toHaveAttribute(
       'href',
       'https://curieux.dev/confidentialite',
     );
-    await expect(footer.getByText('codé au rythme des marées')).toBeVisible();
+    await expect(footer.getByText(words.tagline)).toBeVisible();
   });
 }
 

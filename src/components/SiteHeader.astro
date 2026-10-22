@@ -1,5 +1,5 @@
 ---
-import { otherLocale, pageLocale, ui } from '../lib/i18n';
+import { feedPath, homePath, otherLocale, pageLocale, ui } from '../lib/i18n';
 import Waves from './Waves.astro';
 
 // The scene at the top of every page: a sunset sky with stars, the sun going
@@ -13,7 +13,9 @@ interface Props {
 }
 
 const { languageSwitch } = Astro.props;
-const other = otherLocale(pageLocale(Astro.currentLocale));
+const locale = pageLocale(Astro.currentLocale);
+const home = homePath(locale);
+const other = otherLocale(locale);
 ---
 
 <header class="scene">
@@ -24,16 +26,16 @@ const other = otherLocale(pageLocale(Astro.currentLocale));
   </div>
   <div class="page">
     <div class="top">
-      <a class="badge" href="/">
+      <a class="badge" href={home}>
         Dev <b>curieux</b> <small>blog</small>
       </a>
-      <nav aria-label="Navigation principale">
+      <nav aria-label={ui[locale].navigation}>
         <ul>
           <li>
-            <a href="/#posts">Posts</a>
+            <a href={`${home}#posts`}>Posts</a>
           </li>
           <li>
-            <a href="/rss.xml">RSS</a>
+            <a href={feedPath(locale)}>RSS</a>
           </li>
           <li>
             <a href="https://curieux.dev">
