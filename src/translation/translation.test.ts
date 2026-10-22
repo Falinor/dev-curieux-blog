@@ -355,3 +355,28 @@ test('translate given Post files writes a Translation for each stale or missing 
     'nouveau.mdx',
   ]);
 });
+
+test('translate when Claude Code is not logged in warns with its message and writes nothing', async (t) => {
+  const root = await contentRoot(t, { 'nouveau.mdx': PREMIER_POST });
+  // What `claude -p --output-format json` prints, with exit code 1, before `/login`.
+  const claude = await fakeClaude(
+    t,
+    {
+      type: 'result',
+      subtype: 'success',
+      is_error: true,
+      result: 'Not logged in · Please run /login',
+      terminal_reason: 'api_error',
+    },
+    1,
+  );
+
+  const { status, stderr } = cli(['translate'], root, { path: claude.path });
+
+  assert.equal(status, 0);
+  assert.match(
+    stderr,
+    new RegExp(`^  ${RegExp.escape(join(root, 'posts', 'nouveau.mdx'))}: Not logged in`, 'm'),
+  );
+  assert.deepEqual(await readdir(join(root, 'posts')), ['nouveau.mdx']);
+});
