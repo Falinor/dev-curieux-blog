@@ -9,6 +9,17 @@ export async function getPublishedPosts(): Promise<Post[]> {
   return posts.toSorted((a, b) => b.data.publishedAt.valueOf() - a.data.publishedAt.valueOf());
 }
 
+/**
+ * How the home page lays out Posts (already newest first, as
+ * `getPublishedPosts()` returns them): the Pinned Posts are featured at the top,
+ * or the most recent Post when nothing is pinned; the others follow.
+ */
+export function homeLayout(posts: Post[]): { featured: Post[]; others: Post[] } {
+  const pinned = posts.filter((post) => post.data.pinned);
+  const featured = pinned.length > 0 ? pinned : posts.slice(0, 1);
+  return { featured, others: posts.filter((post) => !featured.includes(post)) };
+}
+
 /** The Post's Tags in frontmatter order: the first one is the Post's stamp. */
 export async function getPostTags(post: Post): Promise<Tag[]> {
   return getEntries(post.data.tags);
