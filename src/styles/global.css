@@ -1,0 +1,45 @@
+@import './tokens.css';
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  /* Behind the page when it overscrolls: the deep sea. */
+  background: var(--sea-1);
+}
+
+body {
+  margin: 0;
+  /* « Cartes postales »: below the scene, the page is the sea. */
+  background: linear-gradient(var(--sea-2), var(--sea-1));
+  color: var(--sea-text);
+  font-family: var(--font-body);
+  font-size: 1rem;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3 {
+  text-wrap: balance;
+}
+
+a {
+  color: var(--link);
+  text-underline-offset: 3px;
+}
+
+:focus-visible {
+  outline: 3px solid var(--coral);
+  outline-offset: 2px;
+}
+
+/* The page column: centred, at most `--page-width`, with a side gutter. */
+.page {
+  width: min(100% - 2 * var(--gutter), var(--page-width));
+  margin-inline: auto;
+}
