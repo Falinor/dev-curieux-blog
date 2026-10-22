@@ -138,3 +138,64 @@ test('pages that are not Posts are websites, previewed with their language’s h
     expect(await content(page, 'meta[property^="article:"]'), path).toEqual([]);
   }
 });
+
+const structuredData = (page: Page) =>
+  page
+    .locator('script[type="application/ld+json"]')
+    .evaluateAll((scripts) => scripts.map((script) => JSON.parse(script.textContent ?? '')));
+
+test('a Post page carries BlogPosting structured data: title, description, dates, language', async ({
+  page,
+}) => {
+  await page.goto('/second-post/');
+
+  expect(await structuredData(page)).toEqual([
+    {
+      '@context': 'https://schema.org',
+      '@type': 'BlogPosting',
+      headline: 'Un second Post',
+      description: 'Un Post plus long, mis à jour depuis sa publication.',
+      inLanguage: 'fr',
+      datePublished: '2026-09-15T00:00:00.000Z',
+      dateModified: '2026-10-01T00:00:00.000Z',
+      url: `${site}/second-post/`,
+      mainEntityOfPage: `${site}/second-post/`,
+      image: `${site}/second-post/og.png`,
+      keywords: ['Astro'],
+      author: { '@type': 'Person', name: 'Dev curieux', url: 'https://curieux.dev' },
+    },
+  ]);
+});
+
+test('an English Post page carries BlogPosting structured data for the Translation of the French Post', async ({
+  page,
+}) => {
+  await page.goto('/en/premier-post/');
+
+  expect(await structuredData(page)).toEqual([
+    {
+      '@context': 'https://schema.org',
+      '@type': 'BlogPosting',
+      headline: 'My first post',
+      description: 'The very first post on the blog, to check that everything works.',
+      inLanguage: 'en',
+      datePublished: '2026-09-01T00:00:00.000Z',
+      // Never updated: modified when published.
+      dateModified: '2026-09-01T00:00:00.000Z',
+      url: `${site}/en/premier-post/`,
+      mainEntityOfPage: `${site}/en/premier-post/`,
+      image: `${site}/en/premier-post/og.png`,
+      keywords: ['Product', 'Astro'],
+      author: { '@type': 'Person', name: 'Dev curieux', url: 'https://curieux.dev' },
+      translationOfWork: { '@id': `${site}/premier-post/` },
+    },
+  ]);
+});
+
+test('pages that are not Posts carry no BlogPosting', async ({ page }) => {
+  for (const path of ['/', '/en/', '/tags/astro/', '/page-inconnue/']) {
+    await page.goto(path);
+
+    expect(await structuredData(page), path).toEqual([]);
+  }
+});

@@ -61,6 +61,23 @@ const hreflangs = alternates
 // English as en-GB, like the dates.
 const ogLocales: Record<Locale, string> = { fr: 'fr_FR', en: 'en_GB' };
 const otherLocales = alternates ? [otherLocale(locale)] : [];
+// For search engines: a Post page is a BlogPosting, and a Translation says
+// which French Post it translates.
+const blogPosting = article && {
+  '@context': 'https://schema.org',
+  '@type': 'BlogPosting',
+  headline: article.headline,
+  description,
+  inLanguage: locale,
+  datePublished: article.publishedAt.toISOString(),
+  dateModified: (article.updatedAt ?? article.publishedAt).toISOString(),
+  url: canonical,
+  mainEntityOfPage: canonical,
+  image: imageUrl,
+  keywords: article.tags,
+  author: { '@type': 'Person', name: 'Dev curieux', url: 'https://curieux.dev' },
+  ...(locale !== 'fr' && alternates && { translationOfWork: { '@id': absolute(alternates.fr) } }),
+};
 ---
 
 <title>{title}</title>
@@ -98,5 +115,11 @@ const otherLocales = alternates ? [otherLocale(locale)] : [];
     )}
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:image" content={imageUrl} />
+    {blogPosting && (
+      <script
+        type="application/ld+json"
+        set:html={JSON.stringify(blogPosting).replaceAll('<', String.raw`\u003c`)}
+      />
+    )}
   </>
 )}
