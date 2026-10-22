@@ -59,6 +59,8 @@ The single source of truth for colors. Light values extend the landing page's pa
 
 Tactile primitive: `border: 3px solid edge` plus `box-shadow: 6px 6px 0 edge` (8px for the sheet and title card, 4px for chips and stickers). Postcards tilt between -1.2° and +0.9° and straighten on hover.
 
+Focus ring: a 3px `coral` outline, 2px off the element (4px round a postcard). In « plein soleil » no single color reaches 3:1 on both the pale sky or cards and the deep sea, so the ring is `ink` round a `paper` halo that fills the gap, in front of any hard shadow.
+
 ## What changes for a blog
 
 Reading comes first. The scene is atmosphere at the edges, never behind the text.
