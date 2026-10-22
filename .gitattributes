@@ -1,0 +1,3 @@
+# A Translation's sourceHash is the SHA-256 of its Post's exact bytes: keep LF
+# everywhere so a Windows checkout hashes the same bytes as CI.
+*.mdx text eol=lf
