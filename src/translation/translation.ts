@@ -2,7 +2,7 @@
 // Runs under plain Node (no `astro:*` imports): the pre-commit hook and CI call it.
 import { createHash } from 'node:crypto';
 import { glob, readFile, writeFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { basename, dirname, join } from 'node:path';
 import { parse, stringify } from 'yaml';
 
 export type TranslationState = 'fresh' | 'stale' | 'missing';
@@ -33,18 +33,12 @@ export type Translator = (frenchPost: string) => Promise<English | { unavailable
 
 const TRANSLATION_SUFFIX = '.en.mdx';
 
-/** Every non-Draft Post under `<contentDir>/posts/`, by slug, with its Translation's state. */
+/** Every non-Draft Post under `<contentDir>/posts/` with its Translation's state. */
 export async function translationStatus(contentDir: string): Promise<PostTranslation[]> {
-  const postsDir = join(contentDir, 'posts');
   const statuses: PostTranslation[] = [];
-  // A pattern list: an `exclude` function is never called for these files (Node 24.22).
-  for await (const name of glob('*.mdx', { cwd: postsDir, exclude: [`*${TRANSLATION_SUFFIX}`] })) {
-    const post = join(postsDir, name);
-    const source = await readFile(post);
-    if (frontmatter(source.toString('utf8')).draft === true) continue;
-    const slug = name.slice(0, -'.mdx'.length);
-    const translation = join(postsDir, `${slug}${TRANSLATION_SUFFIX}`);
-    statuses.push({ slug, post, translation, status: await stateOf(source, translation) });
+  for (const post of await postFiles(contentDir)) {
+    const status = await postTranslation(post);
+    if (status) statuses.push(status);
   }
   return statuses;
 }
@@ -52,19 +46,40 @@ export async function translationStatus(contentDir: string): Promise<PostTransla
 /**
  * Sends every stale or missing Post to the translator and writes its Translation,
  * carrying the Post's current fingerprint as `sourceHash`. Drafts and fresh Posts
- * are skipped.
+ * are skipped. Takes every Post of a content root, or a list of Post files (paths
+ * as given, duplicates ignored).
  */
 export async function translatePosts(
   translator: Translator,
-  { contentDir }: { contentDir: string },
+  from: { contentDir: string } | { posts: string[] },
 ): Promise<void> {
-  for (const { post, translation, status } of await translationStatus(contentDir)) {
-    if (status === 'fresh') continue;
+  const posts = 'posts' in from ? new Set(from.posts) : await postFiles(from.contentDir);
+  for (const post of posts) {
+    const target = await postTranslation(post);
+    if (!target || target.status === 'fresh') continue;
     const source = await readFile(post);
     const english = await translator(source.toString('utf8'));
     if ('unavailable' in english) continue;
-    await writeFile(translation, translationFile(english, fingerprint(source)));
+    await writeFile(target.translation, translationFile(english, fingerprint(source)));
   }
+}
+
+async function postFiles(contentDir: string): Promise<string[]> {
+  const postsDir = join(contentDir, 'posts');
+  // A pattern list: an `exclude` function is never called for these files (Node 24.22).
+  const names = await Array.fromAsync(
+    glob('*.mdx', { cwd: postsDir, exclude: [`*${TRANSLATION_SUFFIX}`] }),
+  );
+  return names.map((name) => join(postsDir, name));
+}
+
+// A Post's Translation (`<slug>.en.mdx` next to it) and its state; undefined for a Draft.
+async function postTranslation(post: string): Promise<PostTranslation | undefined> {
+  const source = await readFile(post);
+  if (frontmatter(source.toString('utf8')).draft === true) return undefined;
+  const slug = basename(post, '.mdx');
+  const translation = join(dirname(post), `${slug}${TRANSLATION_SUFFIX}`);
+  return { slug, post, translation, status: await stateOf(source, translation) };
 }
 
 // A Translation holds only the translated fields and its Post's fingerprint: dates,
