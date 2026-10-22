@@ -35,6 +35,8 @@ export type Translator = (frenchPost: string) => Promise<English | { unavailable
 export interface TranslationReport {
   /** Posts whose Translation was written. */
   translated: PostTranslation[];
+  /** Posts whose Translation was already fresh, so not sent to the translator. */
+  fresh: PostTranslation[];
   /** Posts left untouched because the translator was unavailable: a warning, not an error. */
   unavailable: (PostTranslation & { reason: string })[];
 }
@@ -62,11 +64,15 @@ export async function translatePosts(
   translator: Translator,
   from: { contentDir: string } | { posts: string[] },
 ): Promise<TranslationReport> {
-  const report: TranslationReport = { translated: [], unavailable: [] };
+  const report: TranslationReport = { translated: [], fresh: [], unavailable: [] };
   const posts = 'posts' in from ? new Set(from.posts) : await postFiles(from.contentDir);
   for (const post of posts) {
     const target = await postTranslation(post);
-    if (!target || target.status === 'fresh') continue;
+    if (!target) continue;
+    if (target.status === 'fresh') {
+      report.fresh.push(target);
+      continue;
+    }
     const source = await readFile(post);
     const english = await translator(source.toString('utf8'));
     if ('unavailable' in english) {
