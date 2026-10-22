@@ -63,13 +63,32 @@ export function claudeTranslator({ model }: { model?: string } = {}): Translator
       return { unavailable: `claude gave no answer within ${TIMEOUT_MINUTES} minutes` };
     }
     if (run.error) return { unavailable: `claude could not run: ${run.error.message}` };
-    return english(run.stdout);
+    return english(run.status, run.stdout, run.stderr);
   };
 }
 
-// The English in `claude -p --output-format json` output.
-function english(stdout: string): English | { unavailable: string } {
-  const output = JSON.parse(stdout);
+// The English in `claude -p --output-format json` output, or why there is none
+// (`is_error` with exit code 1 when not logged in, for instance).
+function english(
+  status: number | null,
+  stdout: string,
+  stderr: string,
+): English | { unavailable: string } {
+  let output;
+  try {
+    output = JSON.parse(stdout);
+  } catch {
+    return { unavailable: firstLine(stderr) || `claude exited with code ${status} and no JSON` };
+  }
+  if (status !== 0 || output.is_error) {
+    return {
+      unavailable: firstLine(String(output.result ?? '')) || `claude exited with code ${status}`,
+    };
+  }
   const { title, description, body } = output.structured_output;
   return { title, description, body };
+}
+
+function firstLine(text: string): string {
+  return text.trim().split('\n')[0];
 }
