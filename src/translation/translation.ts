@@ -1,9 +1,9 @@
 // The Translation module (ADR 0002): everything deterministic about Translations.
 // Runs under plain Node (no `astro:*` imports): the pre-commit hook and CI call it.
 import { createHash } from 'node:crypto';
-import { glob, readFile } from 'node:fs/promises';
+import { glob, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { parse } from 'yaml';
+import { parse, stringify } from 'yaml';
 
 export type TranslationState = 'fresh' | 'stale' | 'missing';
 
@@ -17,6 +17,19 @@ export interface PostTranslation {
   translation: string;
   status: TranslationState;
 }
+
+/** What a translator returns for a Post: its English title, description and MDX body. */
+export interface English {
+  title: string;
+  description: string;
+  body: string;
+}
+
+/**
+ * The translator adapter: takes a French Post file's full contents and returns its
+ * English, or `{ unavailable: reason }` when it cannot translate (never throws for that).
+ */
+export type Translator = (frenchPost: string) => Promise<English | { unavailable: string }>;
 
 const TRANSLATION_SUFFIX = '.en.mdx';
 
@@ -34,6 +47,31 @@ export async function translationStatus(contentDir: string): Promise<PostTransla
     statuses.push({ slug, post, translation, status: await stateOf(source, translation) });
   }
   return statuses;
+}
+
+/**
+ * Sends every stale or missing Post to the translator and writes its Translation,
+ * carrying the Post's current fingerprint as `sourceHash`. Drafts and fresh Posts
+ * are skipped.
+ */
+export async function translatePosts(
+  translator: Translator,
+  { contentDir }: { contentDir: string },
+): Promise<void> {
+  for (const { post, translation, status } of await translationStatus(contentDir)) {
+    if (status === 'fresh') continue;
+    const source = await readFile(post);
+    const english = await translator(source.toString('utf8'));
+    if ('unavailable' in english) continue;
+    await writeFile(translation, translationFile(english, fingerprint(source)));
+  }
+}
+
+// A Translation holds only the translated fields and its Post's fingerprint: dates,
+// Tags, `draft` and `pinned` are always read from the Post.
+function translationFile({ title, description, body }: English, sourceHash: string): string {
+  const fields = stringify({ title, description, sourceHash }, { lineWidth: 0 });
+  return `---\n${fields}---\n\n${body.trim()}\n`;
 }
 
 async function stateOf(source: Buffer, translation: string): Promise<TranslationState> {
