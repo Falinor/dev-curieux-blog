@@ -1,0 +1,23 @@
+---
+import { render } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import type { PostView } from '../lib/posts';
+import PostArticle from './PostArticle.astro';
+
+// A Post's page: `/<slug>/` in French, `/en/<slug>/` for its Translation.
+
+interface Props {
+  view: PostView;
+}
+
+const { view } = Astro.props;
+const { Content } = await render(view.text);
+---
+
+<BaseLayout title={view.text.data.title}>
+  <main class="page">
+    <PostArticle view={view}>
+      <Content />
+    </PostArticle>
+  </main>
+</BaseLayout>

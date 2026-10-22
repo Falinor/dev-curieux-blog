@@ -1,0 +1,17 @@
+---
+import PostPage from '../../components/PostPage.astro';
+import { getPostsIn, type PostView } from '../../lib/posts';
+
+export async function getStaticPaths() {
+  const views = await getPostsIn('en');
+  return views.map((view) => ({ params: { slug: view.post.id }, props: { view } }));
+}
+
+interface Props {
+  view: PostView;
+}
+
+const { view } = Astro.props;
+---
+
+<PostPage view={view} />

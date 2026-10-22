@@ -1,26 +1,17 @@
 ---
-import { render } from 'astro:content';
-import PostArticle from '../components/PostArticle.astro';
-import BaseLayout from '../layouts/BaseLayout.astro';
-import { getPublishedPosts, type Post } from '../lib/posts';
+import PostPage from '../components/PostPage.astro';
+import { getPostsIn, type PostView } from '../lib/posts';
 
 export async function getStaticPaths() {
-  const posts = await getPublishedPosts();
-  return posts.map((post) => ({ params: { slug: post.id }, props: { post } }));
+  const views = await getPostsIn('fr');
+  return views.map((view) => ({ params: { slug: view.post.id }, props: { view } }));
 }
 
 interface Props {
-  post: Post;
+  view: PostView;
 }
 
-const { post } = Astro.props;
-const { Content } = await render(post);
+const { view } = Astro.props;
 ---
 
-<BaseLayout title={post.data.title}>
-  <main class="page">
-    <PostArticle post={post}>
-      <Content />
-    </PostArticle>
-  </main>
-</BaseLayout>
+<PostPage view={view} />
