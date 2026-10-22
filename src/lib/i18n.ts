@@ -68,6 +68,11 @@ export const ui = {
       prompt: 'Une remarque, une erreur, une idée ? Écrivez-moi.',
     },
     noPosts: 'Aucun Post pour l’instant.',
+    tag: {
+      title: (label: string) => `Posts sur ${label} — Dev curieux`,
+      description: (label: string) =>
+        `Tous les Posts de Dev curieux sur ${label}, du plus récent au plus ancien.`,
+    },
     legalNotice: 'Mentions légales',
     privacy: 'Confidentialité',
     tagline: 'codé au rythme des marées',
@@ -97,6 +102,10 @@ export const ui = {
       prompt: 'A remark, a mistake, an idea? Write to me.',
     },
     noPosts: 'No posts yet.',
+    tag: {
+      title: (label: string) => `Posts about ${label} — Dev curieux`,
+      description: (label: string) => `Every post by Dev curieux about ${label}, newest first.`,
+    },
     legalNotice: 'Legal notice',
     privacy: 'Privacy',
     tagline: 'coded to the rhythm of the tides',

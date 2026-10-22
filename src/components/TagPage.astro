@@ -15,10 +15,12 @@ interface Props {
 
 const { locale, tag, views } = Astro.props;
 const label = tag.data[locale];
+const words = ui[locale].tag;
 ---
 
 <BaseLayout
-  title={`${label} — Dev curieux`}
+  title={words.title(label)}
+  description={words.description(label)}
   alternates={{ fr: tagPath('fr', tag.id), en: tagPath('en', tag.id) }}
 >
   <main>

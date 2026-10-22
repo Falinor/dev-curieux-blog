@@ -1,0 +1,34 @@
+---
+import type { Alternates } from '../lib/i18n';
+
+// What search engines read in a page's head: its title and description, its
+// canonical URL on blog.curieux.dev, and its other-language version.
+
+export interface Props {
+  /** The document title: unique to the page. */
+  title: string;
+  description: string;
+  /** The page's path in both languages, when it exists in both. */
+  alternates?: Alternates | undefined;
+  /** Keep the page out of search engines (the 404 page): no canonical URL either. */
+  noindex?: boolean | undefined;
+}
+
+const { title, description, alternates, noindex = false } = Astro.props;
+// Absolute on `site`, so it names blog.curieux.dev wherever the build is served
+// (`astro preview`, a pull request's preview deployment).
+const canonical = new URL(Astro.url.pathname, Astro.site).href;
+// Both versions, with French, the original, as the default.
+const hreflangs = alternates
+  ? Object.entries({ fr: alternates.fr, en: alternates.en, 'x-default': alternates.fr }).map(
+      ([hreflang, path]) => ({ hreflang, href: new URL(path, Astro.site).href }),
+    )
+  : [];
+---
+
+<title>{title}</title>
+<meta name="description" content={description} />
+{noindex ? <meta name="robots" content="noindex" /> : <link rel="canonical" href={canonical} />}
+{hreflangs.map(({ hreflang, href }) => (
+  <link rel="alternate" hreflang={hreflang} href={href} />
+))}

@@ -13,10 +13,11 @@ interface Props {
 }
 
 const { view, alternates } = Astro.props;
+const { title, description } = view.text.data;
 const { Content } = await render(view.text);
 ---
 
-<BaseLayout title={view.text.data.title} alternates={alternates}>
+<BaseLayout title={`${title} — Dev curieux`} description={description} alternates={alternates}>
   <main class="page">
     <PostArticle view={view}>
       <Content />
