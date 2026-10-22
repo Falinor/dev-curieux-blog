@@ -113,4 +113,10 @@ const lead =
   .home:hover {
     text-decoration: underline;
   }
+  /* The focus halo goes in front of the hard shadow, which stays. */
+  .home:focus-visible {
+    box-shadow:
+      0 0 0 2px var(--focus-halo),
+      var(--shadow-sm);
+  }
 </style>

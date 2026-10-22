@@ -58,6 +58,11 @@ export const ui = {
     /** The name of the language, written in it: the language switch's label. */
     languageName: 'Français',
     navigation: 'Navigation principale',
+    /** The theme toggle names the theme it switches to, after a hidden verb. */
+    theme: {
+      toLight: { action: 'Passer en', name: 'plein soleil' },
+      toDark: { action: 'Passer au', name: 'crépuscule' },
+    },
     home: {
       title: 'Dev curieux — le blog',
       /** The home page's and the feed's description, for search engines and feed readers. */
@@ -89,6 +94,10 @@ export const ui = {
   en: {
     languageName: 'English',
     navigation: 'Main navigation',
+    theme: {
+      toLight: { action: 'Switch to', name: 'daylight' },
+      toDark: { action: 'Switch to', name: 'dusk' },
+    },
     home: {
       title: 'Dev curieux — the blog',
       description:

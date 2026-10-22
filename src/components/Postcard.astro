@@ -95,13 +95,17 @@ const tags = (await getPostTags(post)).map((tag) => tag.data[locale]);
     text-decoration-color: var(--coral);
     text-decoration-thickness: 3px;
   }
-  /* The focus ring goes round the postcard, the link's hit area. */
+  /* The focus ring goes round the postcard, the link's hit area, on the sea. */
   h3 a:focus-visible {
     outline: none;
+    box-shadow: none;
   }
   .postcard:focus-within {
-    outline: 3px solid var(--coral);
+    outline: 3px solid var(--focus-ring);
     outline-offset: 4px;
+    box-shadow:
+      0 0 0 4px var(--focus-halo),
+      var(--shadow);
   }
 
   p {
