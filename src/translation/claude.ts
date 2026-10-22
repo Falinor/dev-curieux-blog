@@ -80,12 +80,11 @@ function english({
   } catch {
     return { unavailable: firstLine(stderr) || `claude exited with code ${status} and no JSON` };
   }
-  if (status !== 0 || output.is_error) {
-    return {
-      unavailable: firstLine(String(output.result ?? '')) || `claude exited with code ${status}`,
-    };
+  if (status !== 0 || output?.is_error) {
+    const why = firstLine(String(output?.result ?? ''));
+    return { unavailable: why || `claude failed (${output?.subtype ?? `exit code ${status}`})` };
   }
-  const { title, description, body } = output.structured_output ?? {};
+  const { title, description, body } = output?.structured_output ?? {};
   // A Translation needs all three: an empty one would ship a blank page.
   if (![title, description, body].every((field) => typeof field === 'string' && field.trim())) {
     return { unavailable: 'claude answered without a title, description or body' };
