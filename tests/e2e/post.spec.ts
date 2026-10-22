@@ -126,6 +126,22 @@ test('a code block is a card highlighted in the brand colors, and a long line sc
   ).toBe(true);
 });
 
+test('at phone width a long code line scrolls inside its code block, never the page', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 400, height: 800 });
+  await page.goto('/troisieme-post/');
+
+  const code = page.getByRole('article').locator('pre');
+  expect(await code.evaluate((pre) => pre.scrollWidth > pre.clientWidth)).toBe(true);
+  const { scrollWidth, clientWidth } = await page.evaluate(() => ({
+    scrollWidth: document.documentElement.scrollWidth,
+    clientWidth: document.documentElement.clientWidth,
+  }));
+  expect(clientWidth).toBe(400);
+  expect(scrollWidth).toBe(clientWidth);
+});
+
 test('an image next to a Post is optimized by Astro and fits the sheet', async ({ page }) => {
   await page.setViewportSize({ width: 400, height: 800 });
   await page.goto('/troisieme-post/');
