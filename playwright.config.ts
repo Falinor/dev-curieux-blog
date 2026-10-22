@@ -22,17 +22,31 @@ interface Site {
 
 const sites: Site[] = [
   // The main fixture site: most specs, in `tests/e2e/`.
-  { name: 'site', port, testDir: './tests/e2e', testIgnore: ['no-pinned/**', 'analytics/**'] },
+  {
+    name: 'site',
+    port,
+    testDir: './tests/e2e',
+    testIgnore: ['no-pinned/**', 'analytics/**', 'analytics-preview/**'],
+  },
   // No published Post is pinned: specs in `tests/e2e/no-pinned/`.
   { name: 'no-pinned', port: port + 100, testDir: './tests/e2e/no-pinned' },
-  // The main fixture content built with an analytics token, as production is:
-  // specs in `tests/e2e/analytics/`.
+  // The main fixture content built with an analytics token, as Workers Builds
+  // builds production from `main`: specs in `tests/e2e/analytics/`.
   {
     name: 'analytics',
     content: 'site',
-    env: { CF_BEACON_TOKEN: 'test-token' },
+    env: { CF_BEACON_TOKEN: 'test-token', WORKERS_CI_BRANCH: 'main' },
     port: port + 200,
     testDir: './tests/e2e/analytics',
+  },
+  // The same, as Workers Builds builds the preview of another branch: specs in
+  // `tests/e2e/analytics-preview/`.
+  {
+    name: 'analytics-preview',
+    content: 'site',
+    env: { CF_BEACON_TOKEN: 'test-token', WORKERS_CI_BRANCH: 'feat/a-preview' },
+    port: port + 300,
+    testDir: './tests/e2e/analytics-preview',
   },
 ];
 
