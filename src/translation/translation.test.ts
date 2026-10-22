@@ -43,6 +43,9 @@ function fakeTranslator(): { translator: Translator; received: string[] } {
   return { translator, received };
 }
 
+// Why the `claude -p` adapter cannot translate when the `claude` command is missing.
+const NOT_INSTALLED = 'the claude command was not found: install Claude Code and log in';
+
 const unavailableTranslator: Translator = async () => ({
   unavailable: 'claude: command not found',
 });
@@ -69,13 +72,22 @@ async function snapshot(root: string): Promise<Record<string, string>> {
   );
 }
 
-// Runs the Translation command line on a content root, as CI and package scripts do.
-function cli(args: string[], contentDir: string) {
+// Runs the Translation command line on a content root, as CI, package scripts and
+// the pre-commit hook do. `path` replaces PATH, where the command finds `claude`.
+function cli(args: string[], contentDir: string, { path = process.env.PATH, cwd = '.' } = {}) {
   const script = join(import.meta.dirname, 'cli.ts');
   return spawnSync(process.execPath, [script, ...args], {
-    env: { ...process.env, BLOG_CONTENT_DIR: contentDir },
+    env: { ...process.env, BLOG_CONTENT_DIR: contentDir, PATH: path },
     encoding: 'utf8',
+    cwd,
   });
+}
+
+// An empty directory to use as PATH: no `claude` command, as before installing Claude Code.
+async function emptyDir(t: TestContext): Promise<string> {
+  const dir = await mkdtemp(join(tmpdir(), 'empty-'));
+  t.after(() => rm(dir, { recursive: true, force: true }));
+  return dir;
 }
 
 test('status reports a Post without a Translation as missing', async (t) => {
@@ -257,4 +269,28 @@ test('an unknown command exits non-zero instead of passing silently', async (t) 
   const root = await contentRoot(t, { 'premier-post.mdx': PREMIER_POST });
 
   assert.equal(cli(['chek'], root).status, 2);
+});
+
+test('translate without Claude Code installed exits zero, warning about every untranslated Post', async (t) => {
+  const root = await contentRoot(t, {
+    'nouveau.mdx': PREMIER_POST,
+    'modifie.mdx': REVISED_POST,
+    'modifie.en.mdx': translation(PREMIER_POST_SHA256),
+    'brouillon.mdx': DRAFT_POST,
+  });
+  const before = await snapshot(root);
+
+  const { status, stderr } = cli(['translate'], root, { path: await emptyDir(t) });
+
+  assert.equal(status, 0);
+  assert.equal(
+    stderr,
+    [
+      'Warning: these Posts were not translated. Run `pnpm translate` once Claude Code works; until then the Translation check fails.',
+      `  ${join(root, 'posts', 'modifie.mdx')}: ${NOT_INSTALLED}`,
+      `  ${join(root, 'posts', 'nouveau.mdx')}: ${NOT_INSTALLED}`,
+      '',
+    ].join('\n'),
+  );
+  assert.deepEqual(await snapshot(root), before);
 });
