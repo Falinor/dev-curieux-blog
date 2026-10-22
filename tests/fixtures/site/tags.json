@@ -1,0 +1,5 @@
+[
+  { "id": "astro", "fr": "Astro", "en": "Astro" },
+  { "id": "produit", "fr": "Produit", "en": "Product" },
+  { "id": "accessibilite", "fr": "Accessibilité", "en": "Accessibility" }
+]
