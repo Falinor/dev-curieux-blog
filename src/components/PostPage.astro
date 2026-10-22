@@ -2,7 +2,7 @@
 import { render } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { postPath, socialImagePath } from '../lib/i18n';
-import { getPostTags, type PostPageContent } from '../lib/posts';
+import { getTagLabels, type PostPageContent } from '../lib/posts';
 import PostArticle from './PostArticle.astro';
 
 // A Post's page: `/<slug>/` in French, `/en/<slug>/` for its Translation.
@@ -16,7 +16,7 @@ const meta = {
   headline: title,
   publishedAt: post.data.publishedAt,
   updatedAt: post.data.updatedAt,
-  tags: (await getPostTags(post)).map((tag) => tag.data[locale]),
+  tags: await getTagLabels(view),
 };
 const { Content } = await render(entry);
 ---

@@ -97,6 +97,16 @@ export async function getPostTags(post: Post): Promise<Tag[]> {
   return getEntries(post.data.tags);
 }
 
+/** What readers of a language call a Tag. */
+export function tagLabel(tag: Tag, locale: Locale): string {
+  return tag.data[locale];
+}
+
+/** The labels of the Post's Tags in the view's language, the stamp first. */
+export async function getTagLabels({ locale, post }: PostView): Promise<string[]> {
+  return (await getPostTags(post)).map((tag) => tagLabel(tag, locale));
+}
+
 const wordsPerMinute = 200;
 
 /**

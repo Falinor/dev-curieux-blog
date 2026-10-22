@@ -5,7 +5,7 @@ import sharp from 'sharp';
 import tokens from '../styles/tokens.css?raw';
 import { formatDate } from './dates';
 import { type Locale, ui } from './i18n';
-import { getPostTags, type PostView } from './posts';
+import { getTagLabels, type PostView } from './posts';
 import { waveBox, waves } from './waves';
 
 // The social image link previews show (`og:image`): a 1200×630 PNG drawn at
@@ -26,12 +26,12 @@ interface CardText {
 }
 
 /** A Post's image (or its Translation's): its title, date and first Tag in the view's language. */
-export async function postSocialImage({ locale, post, entry }: PostView): Promise<Response> {
-  const [stamp] = await getPostTags(post);
+export async function postSocialImage(view: PostView): Promise<Response> {
+  const [stamp] = await getTagLabels(view);
   return socialImage({
-    kicker: `Dev curieux · ${formatDate(post.data.publishedAt, locale)}`,
-    title: entry.data.title,
-    stamp: stamp.data[locale],
+    kicker: `Dev curieux · ${formatDate(view.post.data.publishedAt, view.locale)}`,
+    title: view.entry.data.title,
+    stamp,
   });
 }
 

@@ -1,7 +1,7 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { type Locale, postPath, tagPath, ui } from '../lib/i18n';
-import type { TaggedPosts } from '../lib/posts';
+import { tagLabel, type TaggedPosts } from '../lib/posts';
 
 // A Tag's page: `/tags/<id>/` in French, `/en/tags/<id>/` in English, titled
 // with the Tag's label in that language. It lists the Posts that language's
@@ -12,7 +12,7 @@ interface Props extends TaggedPosts {
 }
 
 const { locale, tag, views } = Astro.props;
-const label = tag.data[locale];
+const label = tagLabel(tag, locale);
 const words = ui[locale].tag;
 ---
 

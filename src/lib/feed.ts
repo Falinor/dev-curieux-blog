@@ -1,6 +1,6 @@
 import rss from '@astrojs/rss';
 import { feedPath, homePath, type Locale, postPath, ui } from './i18n';
-import { getPostsIn, getPostTags } from './posts';
+import { getPostsIn, getTagLabels } from './posts';
 
 /**
  * The RSS feed of a language (`feedPath()`): the Posts its pages show, newest
@@ -10,12 +10,12 @@ import { getPostsIn, getPostTags } from './posts';
 export async function feed(locale: Locale, site: URL | undefined): Promise<Response> {
   if (!site) throw new Error('The feeds need `site` in astro.config.mjs.');
   const items = await Promise.all(
-    (await getPostsIn(locale)).map(async ({ post, entry }) => ({
-      title: entry.data.title,
-      description: entry.data.description,
-      pubDate: post.data.publishedAt,
-      link: new URL(postPath(locale, post.id), site).href,
-      categories: (await getPostTags(post)).map((tag) => tag.data[locale]),
+    (await getPostsIn(locale)).map(async (view) => ({
+      title: view.entry.data.title,
+      description: view.entry.data.description,
+      pubDate: view.post.data.publishedAt,
+      link: new URL(postPath(locale, view.post.id), site).href,
+      categories: await getTagLabels(view),
     })),
   );
   const self = new URL(feedPath(locale), site).href;

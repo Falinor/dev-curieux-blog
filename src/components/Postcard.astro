@@ -1,7 +1,7 @@
 ---
 import { formatDate, isoDate } from '../lib/dates';
 import { postPath, ui } from '../lib/i18n';
-import { getPostTags, readingMinutes, type PostView } from '../lib/posts';
+import { getTagLabels, readingMinutes, type PostView } from '../lib/posts';
 
 interface Props {
   /** The Post, in the language of the page. */
@@ -14,7 +14,7 @@ const { view, topSlot = false } = Astro.props;
 const { locale, post, entry } = view;
 const { title, description } = entry.data;
 const { publishedAt } = post.data;
-const tags = (await getPostTags(post)).map((tag) => tag.data[locale]);
+const tags = await getTagLabels(view);
 ---
 
 <li class:list={['postcard', { 'top-slot': topSlot }]}>

@@ -1,7 +1,7 @@
 ---
 import { formatDate, isoDate } from '../lib/dates';
 import { postPath, tagPath, ui } from '../lib/i18n';
-import { getPostTags, readingMinutes, type PostView } from '../lib/posts';
+import { getPostTags, readingMinutes, tagLabel, type PostView } from '../lib/posts';
 
 // A Post as readers see it: a title postcard overlapping the horizon of the
 // scene, then the body (the default slot) on a sheet. In English, the text is
@@ -45,7 +45,7 @@ const email = 'contact@curieux.dev';
         <li>
           <a href={tagPath(locale, tag.id)}>
             <span aria-hidden="true">#</span>
-            {tag.data[locale]}
+            {tagLabel(tag, locale)}
           </a>
         </li>
       ))}
