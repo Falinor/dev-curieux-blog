@@ -27,3 +27,11 @@ test('with a token configured, every page includes the analytics beacon with tha
     });
   }
 });
+
+test('the site sets no cookies', async ({ page, context }) => {
+  for (const path of ['/', '/premier-post/', '/tags/astro/', '/page-inconnue/']) {
+    await page.goto(path);
+  }
+
+  expect(await context.cookies()).toEqual([]);
+});
