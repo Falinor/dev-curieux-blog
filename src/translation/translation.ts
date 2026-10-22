@@ -26,20 +26,20 @@ export async function translationStatus(contentDir: string): Promise<PostTransla
   const statuses: PostTranslation[] = [];
   // A pattern list: an `exclude` function is never called for these files (Node 24.22).
   for await (const name of glob('*.mdx', { cwd: postsDir, exclude: [`*${TRANSLATION_SUFFIX}`] })) {
-    const slug = name.slice(0, -'.mdx'.length);
     const post = join(postsDir, name);
+    const source = await readFile(post);
+    if (frontmatter(source.toString('utf8')).draft === true) continue;
+    const slug = name.slice(0, -'.mdx'.length);
     const translation = join(postsDir, `${slug}${TRANSLATION_SUFFIX}`);
-    statuses.push({ slug, post, translation, status: await stateOf(post, translation) });
+    statuses.push({ slug, post, translation, status: await stateOf(source, translation) });
   }
   return statuses;
 }
 
-async function stateOf(post: string, translation: string): Promise<TranslationState> {
+async function stateOf(source: Buffer, translation: string): Promise<TranslationState> {
   const translated = await readIfExists(translation);
   if (translated === undefined) return 'missing';
-  return frontmatter(translated).sourceHash === fingerprint(await readFile(post))
-    ? 'fresh'
-    : 'stale';
+  return frontmatter(translated).sourceHash === fingerprint(source) ? 'fresh' : 'stale';
 }
 
 // The fingerprint of a Post: SHA-256 of the file's exact bytes, frontmatter included,

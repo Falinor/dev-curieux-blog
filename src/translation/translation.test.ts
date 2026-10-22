@@ -77,3 +77,20 @@ test('a title-only change in a Post makes its Translation stale', async (t) => {
     [{ slug: 'premier-post', status: 'stale' }],
   );
 });
+
+test('status never lists a Draft, with or without a Translation', async (t) => {
+  const draft = PREMIER_POST.replace('tags: [astro]', 'tags: [astro]\ndraft: true');
+  const root = await contentRoot(t, {
+    'brouillon.mdx': draft,
+    'autre-brouillon.mdx': draft,
+    'autre-brouillon.en.mdx': translation(PREMIER_POST_SHA256),
+    'premier-post.mdx': PREMIER_POST,
+  });
+
+  const statuses = await translationStatus(root);
+
+  assert.deepEqual(
+    statuses.map(({ slug }) => slug),
+    ['premier-post'],
+  );
+});
