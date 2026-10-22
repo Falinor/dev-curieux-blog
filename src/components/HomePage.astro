@@ -13,7 +13,7 @@ interface Props {
 const { locale } = Astro.props;
 const text = ui[locale].home;
 const [before, highlight, after] = text.heading;
-const { featured, others } = homeLayout(await getPostsIn(locale));
+const { topSlot, others } = homeLayout(await getPostsIn(locale));
 ---
 
 <BaseLayout
@@ -33,8 +33,8 @@ const { featured, others } = homeLayout(await getPostsIn(locale));
     <section id="posts" aria-labelledby="posts-title">
       <h2 id="posts-title">{text.posts}</h2>
       <ol class="postcards">
-        {featured.map((view) => (
-          <Postcard view={view} featured />
+        {topSlot.map((view) => (
+          <Postcard view={view} topSlot />
         ))}
         {others.map((view) => (
           <Postcard view={view} />

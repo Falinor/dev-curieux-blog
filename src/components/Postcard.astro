@@ -6,18 +6,18 @@ import { getPostTags, readingMinutes, type PostView } from '../lib/posts';
 interface Props {
   /** The Post, in the language of the page. */
   view: PostView;
-  /** A featured postcard spans the whole grid, with a bigger title. */
-  featured?: boolean;
+  /** In the home page's top slot, a postcard spans the whole grid, with a bigger title. */
+  topSlot?: boolean;
 }
 
-const { view, featured = false } = Astro.props;
+const { view, topSlot = false } = Astro.props;
 const { locale, post, text } = view;
 const { title, description } = text.data;
 const { publishedAt } = post.data;
 const tags = (await getPostTags(post)).map((tag) => tag.data[locale]);
 ---
 
-<li class:list={['postcard', { featured }]}>
+<li class:list={['postcard', { 'top-slot': topSlot }]}>
   <h3>
     <a href={postPath(locale, post.id)}>{title}</a>
   </h3>
@@ -62,7 +62,7 @@ const tags = (await getPostTags(post)).map((tag) => tag.data[locale]);
   .postcard:nth-child(3n) {
     --tilt: -0.4deg;
   }
-  .featured {
+  .top-slot {
     grid-column: 1 / -1;
     padding: 30px;
   }
@@ -76,7 +76,7 @@ const tags = (await getPostTags(post)).map((tag) => tag.data[locale]);
     line-height: 1.12;
     letter-spacing: -0.015em;
   }
-  .featured h3 {
+  .top-slot h3 {
     max-width: 22ch;
     font-size: clamp(1.7rem, 3.4vw, 2.4rem);
   }

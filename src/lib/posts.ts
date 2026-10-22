@@ -73,13 +73,13 @@ export async function getTagsIn(locale: Locale): Promise<{ tag: Tag; views: Post
 
 /**
  * How a home page lays out Posts (already newest first, as `getPostsIn()`
- * returns them): the Pinned Posts are featured at the top, or the most recent
- * Post when nothing is pinned; the others follow.
+ * returns them): the top slot holds the Pinned Posts, or the most recent Post
+ * when nothing is pinned; the others follow.
  */
-export function homeLayout(views: PostView[]): { featured: PostView[]; others: PostView[] } {
+export function homeLayout(views: PostView[]): { topSlot: PostView[]; others: PostView[] } {
   const pinned = views.filter(({ post }) => post.data.pinned);
-  const featured = pinned.length > 0 ? pinned : views.slice(0, 1);
-  return { featured, others: views.filter((view) => !featured.includes(view)) };
+  const topSlot = pinned.length > 0 ? pinned : views.slice(0, 1);
+  return { topSlot, others: views.filter((view) => !topSlot.includes(view)) };
 }
 
 /** The Post's Tags in frontmatter order: the first one is the Post's stamp. */

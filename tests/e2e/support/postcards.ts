@@ -5,7 +5,7 @@ export interface Postcard {
   /** Layout box, ignoring the tilt: cards on the same row share `top`. */
   top: number;
   width: number;
-  /** True when the card spans the whole grid, as a featured postcard does. */
+  /** True when the card spans the whole grid, as a postcard in the top slot does. */
   spansGrid: boolean;
 }
 
