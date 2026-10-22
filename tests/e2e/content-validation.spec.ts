@@ -31,3 +31,11 @@ test('a Post with an unknown Tag fails the build, naming the Post and the Tag', 
   expect(output).toContain('posts → tag-inconnu');
   expect(output).toContain('Unknown Tag "inexistant"');
 });
+
+test('a Post missing a required field fails the build, naming the Post and the field', async () => {
+  const { failed, output } = await build('tests/fixtures/missing-field');
+
+  expect(failed).toBe(true);
+  expect(output).toContain('posts → champ-manquant');
+  expect(output).toMatch(/description\W*: .*Required/);
+});

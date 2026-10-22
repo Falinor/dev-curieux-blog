@@ -35,10 +35,17 @@ const posts = defineCollection({
   loader: glob({ pattern: ['*.mdx', '!*.en.mdx'], base: `${contentDir}/posts` }),
   schema: z.object({
     title: z.string(),
+    // Used for SEO, RSS, social images and postcards.
+    description: z.string(),
+    // YAML dates (`2026-10-22`) are UTC midnight.
     publishedAt: z.coerce.date(),
     updatedAt: z.coerce.date().optional(),
+    // The first Tag is the Post's stamp.
     tags: z.array(tagId).nonempty(),
     draft: z.boolean().default(false),
+    pinned: z.boolean().default(false),
+    // Reserved for Syndication (out of scope for v1): accepted, never read.
+    syndication: z.unknown().optional(),
   }),
 });
 
