@@ -82,3 +82,35 @@ test.describe('with a stored choice that differs from the system setting', () =>
     await expect(badge(page)).toHaveCSS('background-color', card.pleinSoleil);
   });
 });
+
+test.describe('when storage is blocked', () => {
+  test.use({ colorScheme: 'light' });
+
+  test('pages follow the system setting and the toggle still works, without errors', async ({
+    page,
+  }) => {
+    const errors: Error[] = [];
+    page.on('pageerror', (error) => errors.push(error));
+    // As in a private window or with site data refused: any access throws.
+    await page.addInitScript(() => {
+      Object.defineProperty(window, 'localStorage', {
+        configurable: true,
+        get() {
+          throw new DOMException('The operation is insecure.', 'SecurityError');
+        },
+      });
+    });
+
+    await page.goto('/');
+    await expect(badge(page)).toHaveCSS('background-color', card.pleinSoleil);
+
+    await page.getByRole('button', { name: 'Passer au crépuscule' }).click();
+    await expect(badge(page)).toHaveCSS('background-color', card.crepuscule);
+
+    // The choice could not be kept: the next page follows the system again.
+    await page.getByRole('link', { name: 'Mon premier Post' }).click();
+    await expect(page).toHaveURL('/premier-post/');
+    await expect(badge(page)).toHaveCSS('background-color', card.pleinSoleil);
+    expect(errors).toEqual([]);
+  });
+});
