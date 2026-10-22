@@ -234,7 +234,7 @@ test('translate given Post files sends only those that are stale or missing, onc
   assert.deepEqual(received, [PREMIER_POST]);
   assert.equal(await readPost(root, 'nouveau.en.mdx'), translation(PREMIER_POST_SHA256));
   assert.deepEqual(
-    report.translated.map((written) => written.translation),
+    report.translated.map((written) => written.translationPath),
     [post('nouveau.en.mdx')],
   );
   assert.deepEqual(

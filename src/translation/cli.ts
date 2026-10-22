@@ -23,7 +23,7 @@ if (command === 'check') {
   );
   if (needTranslation.length > 0) {
     console.error('Translation check failed. These Posts need a new Translation:');
-    for (const { post, status } of needTranslation) console.error(`  ${post}: ${status}`);
+    for (const { postPath, status } of needTranslation) console.error(`  ${postPath}: ${status}`);
     process.exitCode = 1;
   }
 } else if (command === 'translate') {
@@ -33,18 +33,20 @@ if (command === 'check') {
     claudeTranslator({ model: process.env.TRANSLATION_MODEL || undefined }),
     posts.length > 0 ? { posts } : { contentDir },
   );
-  for (const { post, translation } of report.translated) {
-    console.log(`Translated ${post} into ${translation}`);
+  for (const { postPath, translationPath } of report.translated) {
+    console.log(`Translated ${postPath} into ${translationPath}`);
   }
   // In the pre-commit hook: every Translation matching a committed Post goes into the
   // same commit, including one already fresh but not staged (written by `pnpm translate`).
   const upToDate = [...report.translated, ...report.fresh];
-  if (values.stage && upToDate.length > 0) gitAdd(upToDate.map(({ translation }) => translation));
+  if (values.stage && upToDate.length > 0)
+    gitAdd(upToDate.map(({ translationPath }) => translationPath));
   if (report.unavailable.length > 0) {
     console.error(
       'Warning: these Posts were not translated. Run `pnpm translate` once Claude Code works; until then the Translation check fails.',
     );
-    for (const { post, reason } of report.unavailable) console.error(`  ${post}: ${reason}`);
+    for (const { postPath, reason } of report.unavailable)
+      console.error(`  ${postPath}: ${reason}`);
   }
 } else {
   console.error('Usage: node src/translation/cli.ts check | translate [--stage] [post…]');
