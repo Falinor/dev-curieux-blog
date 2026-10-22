@@ -57,3 +57,28 @@ test.describe('the theme toggle', () => {
     await expect(badge(page)).toHaveCSS('background-color', card.pleinSoleil);
   });
 });
+
+test.describe('with a stored choice that differs from the system setting', () => {
+  test.use({ colorScheme: 'dark' });
+
+  test('the next page is in the chosen theme before its body exists, so it never flashes the other', async ({
+    page,
+  }) => {
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Passer en plein soleil' }).click();
+
+    // Nothing can be painted before the body exists: record the theme the root
+    // carries at that moment.
+    await page.addInitScript(() => {
+      new MutationObserver((_, observer) => {
+        if (!document.body) return;
+        observer.disconnect();
+        Object.assign(window, { themeWhenBodyAppeared: document.documentElement.dataset.theme });
+      }).observe(document, { childList: true, subtree: true });
+    });
+    await page.goto('/premier-post/');
+
+    expect(await page.evaluate(() => Reflect.get(window, 'themeWhenBodyAppeared'))).toBe('light');
+    await expect(badge(page)).toHaveCSS('background-color', card.pleinSoleil);
+  });
+});
