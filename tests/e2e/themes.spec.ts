@@ -1,4 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
+import { lowContrastTexts } from './support/contrast';
 
 // The `card` token of DESIGN.md in each theme: the badge in the header is a card
 // on every page, so its background tells which theme the page is in.
@@ -114,3 +115,28 @@ test.describe('when storage is blocked', () => {
     expect(errors).toEqual([]);
   });
 });
+
+for (const [theme, colorScheme] of [
+  ['crépuscule', 'dark'],
+  ['plein soleil', 'light'],
+] as const) {
+  test.describe(`in « ${theme} »`, () => {
+    test.use({ colorScheme });
+
+    for (const path of pages) {
+      test(`text, links and postcards on ${path} meet AA contrast`, async ({ page }) => {
+        await page.goto(path);
+
+        // The hero sits on the sky, whose glow varies across the scene: the
+        // header is checked through its navigation and badge only.
+        const header = page.getByRole('banner');
+        const checked = page
+          .getByRole('main')
+          .or(page.getByRole('contentinfo'))
+          .or(header.getByRole('navigation'))
+          .or(header.getByRole('link', { name: 'Dev curieux' }));
+        expect(await lowContrastTexts(checked)).toEqual([]);
+      });
+    }
+  });
+}
