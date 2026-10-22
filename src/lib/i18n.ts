@@ -51,6 +51,9 @@ export const ui = {
     navigation: 'Navigation principale',
     home: {
       title: 'Dev curieux — le blog',
+      /** The home page's and the feed's description, for search engines and feed readers. */
+      description:
+        'Le blog de Dev curieux, développeur fullstack freelance : ce que je construis, ce que j’apprends, et pourquoi.',
       // The highlighted word names the blog.
       heading: ['Cartes postales d’un dev ', 'curieux', ''],
       bio: 'Développeur fullstack freelance. Je construis, j’apprends, et j’écris ce que je découvre.',
@@ -74,6 +77,8 @@ export const ui = {
     navigation: 'Main navigation',
     home: {
       title: 'Dev curieux — the blog',
+      description:
+        'The blog of Dev curieux, a freelance fullstack developer: what I build, what I learn, and why.',
       heading: ['Postcards from a ', 'curious', ' dev'],
       bio: 'Freelance fullstack developer. I build, I learn, and I write down what I find.',
       posts: 'Latest news',
