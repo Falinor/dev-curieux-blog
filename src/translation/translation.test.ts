@@ -133,3 +133,37 @@ test('translate sends only stale and missing Posts and writes their new fingerpr
     ['fresh', 'fresh', 'fresh'],
   );
 });
+
+test('translate given Post files sends only those that are stale or missing, once', async (t) => {
+  const root = await contentRoot(t, {
+    'nouveau.mdx': PREMIER_POST,
+    'pas-demande.mdx': REVISED_POST,
+    'deja-traduit.mdx': PREMIER_POST,
+    'deja-traduit.en.mdx': translation(PREMIER_POST_SHA256),
+    'brouillon.mdx': PREMIER_POST.replace('tags: [astro]', 'tags: [astro]\ndraft: true'),
+  });
+  const { translator, received } = fakeTranslator();
+  const post = (name: string) => join(root, 'posts', name);
+
+  await translatePosts(translator, {
+    posts: [
+      post('nouveau.mdx'),
+      post('deja-traduit.mdx'),
+      post('brouillon.mdx'),
+      post('nouveau.mdx'),
+    ],
+  });
+
+  assert.deepEqual(received, [PREMIER_POST]);
+  assert.equal(await readPost(root, 'nouveau.en.mdx'), translation(PREMIER_POST_SHA256));
+  assert.deepEqual(
+    (await translationStatus(root))
+      .map(({ slug, status }) => ({ slug, status }))
+      .toSorted((a, b) => a.slug.localeCompare(b.slug)),
+    [
+      { slug: 'deja-traduit', status: 'fresh' },
+      { slug: 'nouveau', status: 'fresh' },
+      { slug: 'pas-demande', status: 'missing' },
+    ],
+  );
+});
