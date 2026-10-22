@@ -18,10 +18,12 @@ const [command, ...posts] = positionals;
 
 if (command === 'check') {
   // Fails while a non-Draft Post has a stale or missing Translation, naming each one.
-  const outdated = (await translationStatus(contentDir)).filter(({ status }) => status !== 'fresh');
-  if (outdated.length > 0) {
+  const needTranslation = (await translationStatus(contentDir)).filter(
+    ({ status }) => status !== 'fresh',
+  );
+  if (needTranslation.length > 0) {
     console.error('Translation check failed. These Posts need a new Translation:');
-    for (const { post, status } of outdated) console.error(`  ${post}: ${status}`);
+    for (const { post, status } of needTranslation) console.error(`  ${post}: ${status}`);
     process.exitCode = 1;
   }
 } else if (command === 'translate') {
