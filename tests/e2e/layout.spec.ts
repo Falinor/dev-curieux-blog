@@ -47,3 +47,17 @@ for (const path of pages) {
     await expect(footer.getByText('codé au rythme des marées')).toBeVisible();
   });
 }
+
+for (const path of pages) {
+  test(`${path} has no horizontal scroll at phone width`, async ({ page }) => {
+    await page.setViewportSize({ width: 400, height: 800 });
+    await page.goto(path);
+
+    const { scrollWidth, clientWidth } = await page.evaluate(() => ({
+      scrollWidth: document.documentElement.scrollWidth,
+      clientWidth: document.documentElement.clientWidth,
+    }));
+    expect(clientWidth).toBe(400);
+    expect(scrollWidth).toBe(clientWidth);
+  });
+}
