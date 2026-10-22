@@ -103,9 +103,7 @@ const tags = await getTagLabels(view);
   .postcard:focus-within {
     outline: 3px solid var(--focus-ring);
     outline-offset: 4px;
-    box-shadow:
-      0 0 0 4px var(--focus-halo),
-      var(--shadow);
+    box-shadow: var(--focus-shadow-postcard);
   }
 
   p {
