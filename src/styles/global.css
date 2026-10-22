@@ -33,9 +33,16 @@ a {
   text-underline-offset: 3px;
 }
 
+/*
+ * Two tones in « plein soleil »: the halo fills the gap between an element and
+ * its ring (it is transparent at dusk). An element with its own hard shadow
+ * must repeat it after the halo on `:focus-visible`, or lose the halo: by
+ * daylight the `ink` ring merges into an `edge` shadow.
+ */
 :focus-visible {
-  outline: 3px solid var(--coral);
+  outline: 3px solid var(--focus-ring);
   outline-offset: 2px;
+  box-shadow: 0 0 0 2px var(--focus-halo);
 }
 
 /* The page column: centred, at most `--page-width`, with a side gutter. */

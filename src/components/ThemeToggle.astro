@@ -58,6 +58,12 @@
   .theme-toggle:hover {
     text-decoration: underline;
   }
+  /* The focus halo goes in front of the hard shadow, which stays. */
+  .theme-toggle:focus-visible {
+    box-shadow:
+      0 0 0 2px var(--focus-halo),
+      var(--shadow-sm);
+  }
   .to-light,
   .to-dark {
     align-items: center;

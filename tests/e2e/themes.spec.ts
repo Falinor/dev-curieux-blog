@@ -1,5 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
 import { lowContrastTexts, type LowContrast } from './support/contrast';
+import { weakFocusRings, type WeakFocusRing } from './support/focus';
 import { builtPages } from './support/pages';
 
 // The `card` token of DESIGN.md in each theme: the badge in the header is a card
@@ -144,5 +145,30 @@ for (const [theme, colorScheme] of [
       }
       expect(failures).toEqual({});
     });
+
+    for (const width of [1280, 390]) {
+      test(`at ${width}px, every focus ring of every page stands out 3:1 from what lies behind it`, async ({
+        page,
+      }, testInfo) => {
+        // Two screenshots per focus stop of every page: about 15 s here.
+        test.slow();
+        // Still waves: the screenshots compared must differ only by the ring.
+        await page.emulateMedia({ reducedMotion: 'reduce' });
+        const failures: Record<string, WeakFocusRing[]> = {};
+        for (const path of await builtPages(testInfo)) {
+          await page.setViewportSize({ width, height: 800 });
+          await page.goto(path);
+          // The whole page in view, so moving the focus never scrolls.
+          const height = await page.evaluate(() => document.documentElement.scrollHeight);
+          await page.setViewportSize({ width, height });
+          // Every image in view and loaded: nothing but the ring may change.
+          await page.waitForFunction(() => [...document.images].every((image) => image.complete));
+
+          const weak = await weakFocusRings(page);
+          if (weak.length > 0) failures[path] = weak;
+        }
+        expect(failures).toEqual({});
+      });
+    }
   });
 }

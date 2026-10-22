@@ -120,6 +120,13 @@ const email = 'contact@curieux.dev';
   .chips a:hover {
     text-decoration: underline;
   }
+  /* The focus halo goes in front of the hard shadow, which stays. */
+  .chips a:focus-visible,
+  .contact a:focus-visible {
+    box-shadow:
+      0 0 0 2px var(--focus-halo),
+      var(--shadow-sm);
+  }
 
   .sheet {
     margin-top: 34px;
@@ -181,6 +188,12 @@ const email = 'contact@curieux.dev';
     font-size: 0.875rem;
     line-height: 1.6;
     tab-size: 2;
+  }
+  /* A long block scrolls, so it takes the focus: its halo goes in front of its shadow. */
+  .sheet :global(pre:focus-visible) {
+    box-shadow:
+      0 0 0 2px var(--focus-halo),
+      var(--shadow);
   }
   .sheet :global(pre code) {
     padding: 0;

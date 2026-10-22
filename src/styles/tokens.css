@@ -43,6 +43,14 @@
   --shadow-lg: 8px 8px 0 var(--edge);
   --shadow-sm: 4px 4px 0 var(--edge);
 
+  /*
+   * Focus ring: `coral` at dusk. By daylight no one color stands out from both
+   * the pale sky and cards and the deep sea, so the `ink` ring goes round a
+   * `paper` halo: one of the two always reaches 3:1.
+   */
+  --focus-ring: light-dark(var(--ink), var(--coral));
+  --focus-halo: light-dark(var(--paper), transparent);
+
   /* Page width and side gutter, shared by the header, the main column and the footer. */
   --page-width: 1120px;
   --gutter: clamp(16px, 4vw, 40px);
