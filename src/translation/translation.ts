@@ -41,7 +41,7 @@ export interface TranslationReport {
 
 const TRANSLATION_SUFFIX = '.en.mdx';
 
-/** Every non-Draft Post under `<contentDir>/posts/` with its Translation's state. */
+/** Every non-Draft Post under `<contentDir>/posts/`, by slug, with its Translation's state. */
 export async function translationStatus(contentDir: string): Promise<PostTranslation[]> {
   const statuses: PostTranslation[] = [];
   for (const post of await postFiles(contentDir)) {
@@ -85,7 +85,7 @@ async function postFiles(contentDir: string): Promise<string[]> {
   const names = await Array.fromAsync(
     glob('*.mdx', { cwd: postsDir, exclude: [`*${TRANSLATION_SUFFIX}`] }),
   );
-  return names.map((name) => join(postsDir, name));
+  return names.toSorted().map((name) => join(postsDir, name));
 }
 
 // A Post's Translation (`<slug>.en.mdx` next to it) and its state; undefined for a Draft.
