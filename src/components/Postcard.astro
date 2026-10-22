@@ -2,6 +2,7 @@
 import { formatDate, isoDate } from '../lib/dates';
 import { postPath, ui } from '../lib/i18n';
 import { getTagLabels, readingMinutes, type PostView } from '../lib/posts';
+import Stamp from './Stamp.astro';
 
 interface Props {
   /** The Post, in the language of the page. */
@@ -28,9 +29,7 @@ const tags = await getTagLabels(view);
     <span>{tags.map((tag) => `#${tag}`).join(' ')}</span>
   </p>
   {/* The first Tag, already read in the postmark. */}
-  <span class="stamp" aria-hidden="true">
-    {tags[0]}
-  </span>
+  <Stamp class="corner">{tags[0]}</Stamp>
 </li>
 
 <style>
@@ -125,26 +124,10 @@ const tags = await getTagLabels(view);
     font-size: 0.75rem;
   }
 
-  .stamp {
+  .corner {
     grid-area: stamp;
-    display: grid;
-    place-items: center;
-    width: 72px;
-    height: 80px;
     margin: -6px -6px 0 0;
-    padding: 7px;
-    background: var(--sun);
-    color: var(--on-sun);
-    outline: 2px dashed var(--edge);
-    outline-offset: -6px;
-    font-family: var(--font-mono);
     font-size: 0.62rem;
-    font-weight: 600;
-    line-height: 1.15;
-    text-align: center;
-    hyphens: auto;
-    overflow-wrap: break-word;
-    transform: rotate(4deg);
   }
 
   /*

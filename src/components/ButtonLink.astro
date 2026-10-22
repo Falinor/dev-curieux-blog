@@ -1,0 +1,31 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+
+// A link drawn as a button: the tactile primitive in coral.
+
+type Props = HTMLAttributes<'a'>;
+
+const { class: className, ...rest } = Astro.props;
+---
+
+<a class:list={['button', className]} {...rest}>
+  <slot />
+</a>
+
+<style>
+  .button {
+    padding: 4px 14px;
+    background: var(--coral);
+    color: var(--on-sun);
+    border: var(--outline);
+    box-shadow: var(--shadow-sm);
+    font-weight: 700;
+    text-decoration: none;
+  }
+  .button:hover {
+    text-decoration: underline;
+  }
+  .button:focus-visible {
+    box-shadow: var(--focus-shadow-sm);
+  }
+</style>

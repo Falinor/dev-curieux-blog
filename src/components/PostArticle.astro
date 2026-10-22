@@ -2,6 +2,8 @@
 import { formatDate, isoDate } from '../lib/dates';
 import { postPath, tagPath, ui } from '../lib/i18n';
 import { getPostTags, readingMinutes, tagLabel, type PostView } from '../lib/posts';
+import ButtonLink from './ButtonLink.astro';
+import TitleCard from './TitleCard.astro';
 
 // A Post as readers see it: a title postcard overlapping the horizon of the
 // scene, then the body (the default slot) on a sheet. In English, the text is
@@ -25,7 +27,7 @@ const email = 'contact@curieux.dev';
 ---
 
 <article>
-  <header class="title-card">
+  <TitleCard as="header">
     <p class="meta">
       <span>
         {words.published}{' '}
@@ -50,7 +52,7 @@ const email = 'contact@curieux.dev';
         </li>
       ))}
     </ul>
-  </header>
+  </TitleCard>
   {locale === 'en' && (
     <p class="notice">
       {ui.en.notice.text}{' '}
@@ -65,7 +67,7 @@ const email = 'contact@curieux.dev';
       <h2 id={words.react.id}>{words.react.heading}</h2>
       <p>{words.react.prompt}</p>
       <p class="contact">
-        <a href={linkedin}>LinkedIn</a>
+        <ButtonLink href={linkedin}>LinkedIn</ButtonLink>
         <span class="email">{email}</span>
       </p>
     </section>
@@ -77,18 +79,9 @@ const email = 'contact@curieux.dev';
     position: relative;
     /* Inside the sheet's padding, a line of body text holds about 68 characters. */
     max-width: 740px;
-    /* The title postcard overlaps the horizon, over the waves. */
-    margin: -70px auto 0;
+    margin-inline: auto;
   }
 
-  .title-card {
-    padding: 26px 28px;
-    background: var(--card);
-    color: var(--ink);
-    border: var(--outline);
-    box-shadow: var(--shadow-lg);
-    transform: rotate(-1deg);
-  }
   .meta {
     display: flex;
     flex-wrap: wrap;
@@ -100,16 +93,6 @@ const email = 'contact@curieux.dev';
   }
   h1 {
     margin: 8px 0 12px;
-    font-family: var(--font-display);
-    font-size: clamp(1.9rem, 4.6vw, 3rem);
-    font-weight: 800;
-    line-height: 1.04;
-    letter-spacing: -0.03em;
-  }
-  .lead {
-    margin: 0;
-    color: var(--muted);
-    font-size: 1.12rem;
   }
   /* Tag chips: stickers, like the header's. */
   .chips {
@@ -135,8 +118,7 @@ const email = 'contact@curieux.dev';
   .chips a:hover {
     text-decoration: underline;
   }
-  .chips a:focus-visible,
-  .contact a:focus-visible {
+  .chips a:focus-visible {
     box-shadow: var(--focus-shadow-sm);
   }
 
@@ -249,18 +231,6 @@ const email = 'contact@curieux.dev';
     flex-wrap: wrap;
     align-items: center;
     gap: 12px 18px;
-  }
-  .contact a {
-    padding: 4px 14px;
-    background: var(--coral);
-    color: var(--on-sun);
-    border: var(--outline);
-    box-shadow: var(--shadow-sm);
-    font-weight: 700;
-    text-decoration: none;
-  }
-  .contact a:hover {
-    text-decoration: underline;
   }
   /* One click selects the whole address, ready to copy. */
   .email {

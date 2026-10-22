@@ -102,6 +102,15 @@ export const ui = {
     legalNotice: 'Mentions légales',
     privacy: 'Confidentialité',
     tagline: 'codé au rythme des marées',
+    /** The 404 page, in French only: one page answers every unknown URL. */
+    notFound: {
+      title: 'Page introuvable — Dev curieux',
+      // The post office's rubber stamp on mail it can't deliver.
+      postmark: 'N’habite pas à l’adresse indiquée',
+      heading: 'Cette page a pris le large',
+      lead: 'Je ne trouve rien à cette adresse : le lien est peut-être cassé, ou la page a dérivé ailleurs.',
+      home: 'Retour à l’accueil',
+    },
   },
   en: {
     languageName: 'English',
