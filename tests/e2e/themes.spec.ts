@@ -1,5 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
-import { lowContrastTexts } from './support/contrast';
+import { lowContrastTexts, type LowContrast } from './support/contrast';
+import { builtPages } from './support/pages';
 
 // The `card` token of DESIGN.md in each theme: the badge in the header is a card
 // on every page, so its background tells which theme the page is in.
@@ -123,8 +124,11 @@ for (const [theme, colorScheme] of [
   test.describe(`in « ${theme} »`, () => {
     test.use({ colorScheme });
 
-    for (const path of pages) {
-      test(`text, links and postcards on ${path} meet AA contrast`, async ({ page }) => {
+    test('the text, links and postcards of every page meet AA contrast', async ({
+      page,
+    }, testInfo) => {
+      const failures: Record<string, LowContrast[]> = {};
+      for (const path of await builtPages(testInfo)) {
         await page.goto(path);
 
         // The hero sits on the sky, whose glow varies across the scene: the
@@ -135,8 +139,10 @@ for (const [theme, colorScheme] of [
           .or(page.getByRole('contentinfo'))
           .or(header.getByRole('navigation'))
           .or(header.getByRole('link', { name: 'Dev curieux' }));
-        expect(await lowContrastTexts(checked)).toEqual([]);
-      });
-    }
+        const low = await lowContrastTexts(checked);
+        if (low.length > 0) failures[path] = low;
+      }
+      expect(failures).toEqual({});
+    });
   });
 }
