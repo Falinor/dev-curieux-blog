@@ -7,6 +7,12 @@ export type Locale = (typeof locales)[number];
 /** The language Posts are written in, served at the root. */
 export const defaultLocale: Locale = 'fr';
 
+/**
+ * Each language with its region, as a BCP 47 tag, for dates and link
+ * previews: French from France, British English.
+ */
+export const languageTags: Record<Locale, string> = { fr: 'fr-FR', en: 'en-GB' };
+
 /** The language of the page being built, from `Astro.currentLocale`. */
 export function pageLocale(currentLocale: string | undefined): Locale {
   return currentLocale === 'en' ? 'en' : 'fr';

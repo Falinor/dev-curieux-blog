@@ -6,6 +6,7 @@ import {
   type Locale,
   otherLocale,
   pageLocale,
+  languageTags,
   socialImagePath,
   socialImageSize,
   ui,
@@ -62,8 +63,8 @@ const hreflangs = alternates
       ([hreflang, path]) => ({ hreflang, href: absolute(path) }),
     )
   : [];
-// English as en-GB, like the dates.
-const ogLocales: Record<Locale, string> = { fr: 'fr_FR', en: 'en_GB' };
+// Open Graph writes `fr_FR` for `fr-FR`.
+const ogLocale = (of: Locale) => languageTags[of].replace('-', '_');
 const otherLocales = alternates ? [otherLocale(locale)] : [];
 // For search engines: a Post page is a BlogPosting, and a Translation says
 // which French Post it translates.
@@ -103,9 +104,9 @@ const blogPosting = post && {
     <meta property="og:title" content={post?.headline ?? title} />
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />
-    <meta property="og:locale" content={ogLocales[locale]} />
+    <meta property="og:locale" content={ogLocale(locale)} />
     {otherLocales.map((other) => (
-      <meta property="og:locale:alternate" content={ogLocales[other]} />
+      <meta property="og:locale:alternate" content={ogLocale(other)} />
     ))}
     <meta property="og:image" content={imageUrl} />
     <meta property="og:image:width" content={String(socialImageSize.width)} />
