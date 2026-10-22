@@ -140,11 +140,20 @@ const stars = [
   [96, 7, 2],
 ] as const;
 
-/** Long titles get a smaller size, and four lines at most, then an ellipsis. */
-function titleSize(title: string): number {
-  if (title.length <= 32) return 70;
-  if (title.length <= 64) return 58;
-  return 48;
+/** The postcard's content width, the gap between the title and the stamp, the stamp's margin round its frame. */
+const postcard = { width: 860, gap: 32, stampPadding: 9 };
+
+/**
+ * Long titles get a smaller size, and four lines at most, then an ellipsis.
+ * A smaller size too when the longest word would not fit on a line at this
+ * one (Bricolage Grotesque's glyphs average under 0.55em), down to 48px: past
+ * that, the word breaks.
+ */
+function titleSize(title: string, lineWidth: number): number {
+  const byLength = title.length <= 32 ? 70 : title.length <= 64 ? 58 : 48;
+  const longestWord = Math.max(...title.split(/\s+/).map((word) => word.length));
+  const fits = (size: number) => size <= byLength && 0.55 * longestWord * size <= lineWidth;
+  return [70, 58, 48].find(fits) ?? 48;
 }
 
 /**
@@ -161,6 +170,8 @@ function stampLayout(label: string): { width: number; fontSize: number } {
 function scene({ kicker, title, stamp }: CardText): Block {
   const { width, height } = socialImageSize;
   const stampBox = stampLayout(stamp);
+  // Boxes are content-box: the stamp takes its width and its padding.
+  const titleWidth = postcard.width - postcard.gap - stampBox.width - 2 * postcard.stampPadding;
   return element(
     'div',
     {
@@ -250,8 +261,8 @@ function scene({ kicker, title, stamp }: CardText): Block {
         {
           display: 'flex',
           alignItems: 'flex-start',
-          gap: 32,
-          width: 860,
+          gap: postcard.gap,
+          width: postcard.width,
           padding: '36px 36px 44px 44px',
           backgroundColor: dusk('card'),
           border: outline,
@@ -260,14 +271,22 @@ function scene({ kicker, title, stamp }: CardText): Block {
         },
         element(
           'div',
-          { display: 'flex', flexDirection: 'column', flex: 1, gap: 16, paddingTop: 8 },
+          // `minWidth: 0`: a long word must wrap, not widen the column and push the stamp out.
+          {
+            display: 'flex',
+            flexDirection: 'column',
+            flex: 1,
+            minWidth: 0,
+            gap: 16,
+            paddingTop: 8,
+          },
           element('div', { fontFamily: 'Geist Mono', fontSize: 24, color: dusk('muted') }, kicker),
           element(
             'div',
             {
               fontFamily: 'Bricolage Grotesque',
               fontWeight: 800,
-              fontSize: titleSize(title),
+              fontSize: titleSize(title, titleWidth),
               lineHeight: 1.04,
               letterSpacing: '-0.02em',
               color: dusk('ink'),
@@ -285,7 +304,7 @@ function scene({ kicker, title, stamp }: CardText): Block {
             flexShrink: 0,
             width: stampBox.width,
             height: 156,
-            padding: 9,
+            padding: postcard.stampPadding,
             backgroundColor: dusk('sun'),
             transform: 'rotate(4deg)',
           },
