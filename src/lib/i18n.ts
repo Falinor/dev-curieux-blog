@@ -46,6 +46,9 @@ export function socialImagePath(pagePath: string): string {
   return `${pagePath}og.png`;
 }
 
+/** Every social image's size, in pixels: what link previews expect. */
+export const socialImageSize = { width: 1200, height: 630 };
+
 /**
  * The paths of one page in both languages, when it exists in both: a Post
  * with a Translation, a home page, a Tag page. A page with no counterpart (a

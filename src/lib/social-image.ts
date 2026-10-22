@@ -4,7 +4,7 @@ import satori, { type Font } from 'satori';
 import sharp from 'sharp';
 import tokens from '../styles/tokens.css?raw';
 import { formatDate } from './dates';
-import { type Locale, ui } from './i18n';
+import { type Locale, socialImageSize, ui } from './i18n';
 import { getTagLabels, type PostView } from './posts';
 import { waveBox, waves } from './waves';
 
@@ -13,8 +13,6 @@ import { waveBox, waves } from './waves';
 // title is on a tilted card with its stamp, the sun sets behind the waves, and
 // `blog.curieux.dev` is written on the sea. Satori lays it out with the brand
 // fonts and turns the text into paths; sharp draws the PNG. No network.
-
-export const socialImageSize = { width: 1200, height: 630 };
 
 /** What the image's postcard says. */
 interface CardText {
