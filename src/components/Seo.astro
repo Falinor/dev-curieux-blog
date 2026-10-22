@@ -15,8 +15,8 @@ import {
 // other-language version, the Open Graph and Twitter card tags of its preview,
 // and the RSS feed of its language.
 
-/** A Post page: the Post as link previews describe it. */
-export interface Article {
+/** A Post page: the Post as link previews and search engines describe it. */
+export interface PostMeta {
   /** The title of the Post (or of its Translation), without the site's name. */
   headline: string;
   publishedAt: Date;
@@ -36,7 +36,7 @@ export interface Props {
    * language's home page image.
    */
   image?: string | undefined;
-  article?: Article | undefined;
+  post?: PostMeta | undefined;
   /** Keep the page out of search engines (the 404 page): no canonical URL, no preview. */
   noindex?: boolean | undefined;
 }
@@ -47,7 +47,7 @@ const {
   description,
   alternates,
   image = socialImagePath(homePath(locale)),
-  article,
+  post,
   noindex = false,
 } = Astro.props;
 // Absolute on `site`, so they name blog.curieux.dev wherever the build is
@@ -66,18 +66,18 @@ const ogLocales: Record<Locale, string> = { fr: 'fr_FR', en: 'en_GB' };
 const otherLocales = alternates ? [otherLocale(locale)] : [];
 // For search engines: a Post page is a BlogPosting, and a Translation says
 // which French Post it translates.
-const blogPosting = article && {
+const blogPosting = post && {
   '@context': 'https://schema.org',
   '@type': 'BlogPosting',
-  headline: article.headline,
+  headline: post.headline,
   description,
   inLanguage: locale,
-  datePublished: article.publishedAt.toISOString(),
-  dateModified: (article.updatedAt ?? article.publishedAt).toISOString(),
+  datePublished: post.publishedAt.toISOString(),
+  dateModified: (post.updatedAt ?? post.publishedAt).toISOString(),
   url: canonical,
   mainEntityOfPage: canonical,
   image: imageUrl,
-  keywords: article.tags,
+  keywords: post.tags,
   author: { '@type': 'Person', name: 'Dev curieux', url: 'https://curieux.dev' },
   ...(locale !== 'fr' && alternates && { translationOfWork: { '@id': absolute(alternates.fr) } }),
 };
@@ -97,9 +97,9 @@ const blogPosting = article && {
 />
 {!noindex && (
   <>
-    <meta property="og:type" content={article ? 'article' : 'website'} />
+    <meta property="og:type" content={post ? 'article' : 'website'} />
     <meta property="og:site_name" content="Dev curieux" />
-    <meta property="og:title" content={article?.headline ?? title} />
+    <meta property="og:title" content={post?.headline ?? title} />
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />
     <meta property="og:locale" content={ogLocales[locale]} />
@@ -110,14 +110,14 @@ const blogPosting = article && {
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
     <meta property="og:image:type" content="image/png" />
-    <meta property="og:image:alt" content={article?.headline ?? title} />
-    {article && (
+    <meta property="og:image:alt" content={post?.headline ?? title} />
+    {post && (
       <>
-        <meta property="article:published_time" content={article.publishedAt.toISOString()} />
-        {article.updatedAt && (
-          <meta property="article:modified_time" content={article.updatedAt.toISOString()} />
+        <meta property="article:published_time" content={post.publishedAt.toISOString()} />
+        {post.updatedAt && (
+          <meta property="article:modified_time" content={post.updatedAt.toISOString()} />
         )}
-        {article.tags.map((tag) => (
+        {post.tags.map((tag) => (
           <meta property="article:tag" content={tag} />
         ))}
       </>

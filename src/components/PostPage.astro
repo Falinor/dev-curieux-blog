@@ -15,7 +15,7 @@ interface Props {
 const { view, alternates } = Astro.props;
 const { locale, post, text } = view;
 const { title, description } = text.data;
-const article = {
+const meta = {
   headline: title,
   publishedAt: post.data.publishedAt,
   updatedAt: post.data.updatedAt,
@@ -29,7 +29,7 @@ const { Content } = await render(text);
   description={description}
   alternates={alternates}
   image={socialImagePath(postPath(locale, post.id))}
-  article={article}
+  post={meta}
 >
   <main class="page">
     <PostArticle view={view}>
