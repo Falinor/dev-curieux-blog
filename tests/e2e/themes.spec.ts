@@ -6,7 +6,7 @@ import { builtPages } from './support/pages';
 // The `card` token of DESIGN.md in each theme: the badge in the header is a card
 // on every page, so its background tells which theme the page is in.
 const card = { crepuscule: 'rgb(42, 32, 82)', pleinSoleil: 'rgb(255, 246, 230)' };
-const pages = ['/', '/premier-post/', '/tags/astro/'];
+const pages = ['/', '/premier-post/', '/tags/astro/', '/en/', '/en/premier-post/'];
 
 const badge = (page: Page) => page.getByRole('banner').getByRole('link', { name: 'Dev curieux' });
 
@@ -58,6 +58,20 @@ test.describe('the theme toggle', () => {
 
     await page.reload();
     await expect(badge(page)).toHaveCSS('background-color', card.pleinSoleil);
+
+    await page.getByRole('link', { name: 'English' }).click();
+    await expect(page).toHaveURL('/en/premier-post/');
+    await expect(badge(page)).toHaveCSS('background-color', card.pleinSoleil);
+  });
+
+  test('on English pages, it is labelled in English', async ({ page }) => {
+    await page.goto('/en/');
+
+    await page.getByRole('button', { name: 'Switch to daylight' }).click();
+    await expect(badge(page)).toHaveCSS('background-color', card.pleinSoleil);
+
+    await page.getByRole('button', { name: 'Switch to dusk' }).click();
+    await expect(badge(page)).toHaveCSS('background-color', card.crepuscule);
   });
 });
 
