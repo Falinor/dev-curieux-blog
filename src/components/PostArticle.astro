@@ -1,17 +1,23 @@
 ---
 import { formatDate, isoDate } from '../lib/dates';
-import { getPostTags, readingMinutes, type Post } from '../lib/posts';
+import { postPath, tagPath, ui } from '../lib/i18n';
+import { getPostTags, readingMinutes, type PostView } from '../lib/posts';
 
 // A Post as readers see it: a title postcard overlapping the horizon of the
-// scene, then the body (the default slot) on a sheet.
+// scene, then the body (the default slot) on a sheet. In English, the text is
+// the Translation's, and a notice between the two says so.
 
 interface Props {
-  post: Post;
+  /** The Post, in the language of the page. */
+  view: PostView;
 }
 
-const { post } = Astro.props;
-const { title, description, publishedAt, updatedAt } = post.data;
+const { view } = Astro.props;
+const { locale, post, text } = view;
+const { title, description } = text.data;
+const { publishedAt, updatedAt } = post.data;
 const tags = await getPostTags(post);
+const words = ui[locale];
 
 // Where readers can react. The address is shown as text, not as a link.
 const linkedin = 'https://www.linkedin.com/in/andrea-gueugnaut/';
@@ -22,33 +28,42 @@ const email = 'contact@curieux.dev';
   <header class="title-card">
     <p class="meta">
       <span>
-        Publié le <time datetime={isoDate(publishedAt)}>{formatDate(publishedAt)}</time>
+        {words.published}{' '}
+        <time datetime={isoDate(publishedAt)}>{formatDate(publishedAt, locale)}</time>
       </span>
       {updatedAt && (
         <span>
-          Mis à jour le <time datetime={isoDate(updatedAt)}>{formatDate(updatedAt)}</time>
+          {words.updated} <time datetime={isoDate(updatedAt)}>{formatDate(updatedAt, locale)}</time>
         </span>
       )}
-      <span>{readingMinutes(post.body)} min de lecture</span>
+      <span>{words.readingTime(readingMinutes(text.body))}</span>
     </p>
     <h1>{title}</h1>
     <p class="lead">{description}</p>
     <ul class="chips" aria-label="Tags">
       {tags.map((tag) => (
         <li>
-          <a href={`/tags/${tag.id}/`}>
+          <a href={tagPath(locale, tag.id)}>
             <span aria-hidden="true">#</span>
-            {tag.data.fr}
+            {tag.data[locale]}
           </a>
         </li>
       ))}
     </ul>
   </header>
+  {locale === 'en' && (
+    <p class="notice">
+      {ui.en.notice.text}{' '}
+      <a href={postPath('fr', post.id)} hreflang="fr">
+        {ui.en.notice.link}
+      </a>
+    </p>
+  )}
   <div class="sheet">
     <slot />
-    <section class="react" aria-labelledby="reagir">
-      <h2 id="reagir">Réagir</h2>
-      <p>Une remarque, une erreur, une idée&nbsp;? Écrivez-moi.</p>
+    <section class="react" aria-labelledby={words.react.id}>
+      <h2 id={words.react.id}>{words.react.heading}</h2>
+      <p>{words.react.prompt}</p>
       <p class="contact">
         <a href={linkedin}>LinkedIn</a>
         <span class="email">{email}</span>
@@ -126,6 +141,25 @@ const email = 'contact@curieux.dev';
     box-shadow:
       0 0 0 2px var(--focus-halo),
       var(--shadow-sm);
+  }
+
+  /*
+   * Visible, without shouting: a small sun card, tilted the other way from the
+   * title card.
+   */
+  .notice {
+    margin: 30px 8px 0;
+    padding: 10px 14px;
+    background: var(--sun);
+    color: var(--on-sun);
+    border: var(--outline);
+    box-shadow: var(--shadow-sm);
+    font-size: 0.95rem;
+    transform: rotate(0.8deg);
+  }
+  .notice a {
+    color: inherit;
+    font-weight: 600;
   }
 
   .sheet {

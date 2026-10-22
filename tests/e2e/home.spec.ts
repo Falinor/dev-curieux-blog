@@ -75,7 +75,7 @@ test('keyboard focus moves from the header to the postcards and is always visibl
   const outlineOf = (selector: string) =>
     page.evaluate((s) => getComputedStyle(document.querySelector(s)!).outlineStyle, selector);
 
-  for (const name of ['Dev curieux blog', 'Posts', 'RSS', 'curieux.dev']) {
+  for (const name of ['Dev curieux blog', 'Posts', 'RSS', 'curieux.dev', 'English']) {
     await page.keyboard.press('Tab');
     await expect(page.getByRole('link', { name, exact: true })).toBeFocused();
     expect(await outlineOf(':focus')).toBe('solid');

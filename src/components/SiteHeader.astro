@@ -1,4 +1,5 @@
 ---
+import { feedPath, homePath, otherLocale, pageLocale, ui } from '../lib/i18n';
 import ThemeToggle from './ThemeToggle.astro';
 import Waves from './Waves.astro';
 
@@ -6,6 +7,16 @@ import Waves from './Waves.astro';
 // down behind drifting waves. Over it, the tilted « Dev curieux » badge, the
 // navigation, and whatever the page puts in its slot (the home page's hero).
 // The scene grows with that content and keeps clear of the waves.
+
+interface Props {
+  /** The same page in the other language (or, without one, its home page). */
+  languageSwitch: string;
+}
+
+const { languageSwitch } = Astro.props;
+const locale = pageLocale(Astro.currentLocale);
+const home = homePath(locale);
+const other = otherLocale(locale);
 ---
 
 <header class="scene">
@@ -16,20 +27,26 @@ import Waves from './Waves.astro';
   </div>
   <div class="page">
     <div class="top">
-      <a class="badge" href="/">
+      <a class="badge" href={home}>
         Dev <b>curieux</b> <small>blog</small>
       </a>
-      <nav aria-label="Navigation principale">
+      <nav aria-label={ui[locale].navigation}>
         <ul>
           <li>
-            <a href="/#posts">Posts</a>
+            <a href={`${home}#posts`}>Posts</a>
           </li>
           <li>
-            <a href="/rss.xml">RSS</a>
+            <a href={feedPath(locale)}>RSS</a>
           </li>
           <li>
             <a href="https://curieux.dev">
               curieux.dev<span aria-hidden="true"> ↗</span>
+            </a>
+          </li>
+          <li>
+            {/* Named in the language it leads to, so readers of it recognise it. */}
+            <a href={languageSwitch} hreflang={other} lang={other}>
+              {ui[other].languageName}
             </a>
           </li>
           <li>

@@ -1,0 +1,95 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { homePath, type Locale, ui } from '../lib/i18n';
+import { getPostsIn, homeLayout } from '../lib/posts';
+import Postcard from './Postcard.astro';
+
+// A home page: `/` in French, `/en/` in English, with the same ordering rules.
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const text = ui[locale].home;
+const [before, highlight, after] = text.heading;
+const { featured, others } = homeLayout(await getPostsIn(locale));
+---
+
+<BaseLayout title={text.title} alternates={{ fr: homePath('fr'), en: homePath('en') }}>
+  <div class="hero" slot="hero">
+    <h1>
+      {before}
+      <span class="highlight">{highlight}</span>
+      {after}
+    </h1>
+    <p>{text.bio}</p>
+  </div>
+  <main class="page">
+    <section id="posts" aria-labelledby="posts-title">
+      <h2 id="posts-title">{text.posts}</h2>
+      <ol class="postcards">
+        {featured.map((view) => (
+          <Postcard view={view} featured />
+        ))}
+        {others.map((view) => (
+          <Postcard view={view} />
+        ))}
+      </ol>
+    </section>
+  </main>
+</BaseLayout>
+
+<style>
+  .hero {
+    padding-top: 40px;
+  }
+  h1 {
+    max-width: 12ch;
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: clamp(2.4rem, 7vw, 4.6rem);
+    font-weight: 800;
+    line-height: 0.98;
+    letter-spacing: -0.035em;
+  }
+  /* A sticker on the word that names the blog. */
+  .highlight {
+    display: inline-block;
+    padding: 0 0.15em;
+    background: var(--sun);
+    color: var(--on-sun);
+    border: var(--outline);
+    box-shadow: var(--shadow-sm);
+    transform: rotate(-2deg);
+  }
+  .hero p {
+    max-width: 34ch;
+    margin: 14px 0 0;
+    font-size: 1.1rem;
+  }
+
+  section {
+    padding-block: 40px 24px;
+  }
+  h2 {
+    margin: 0 0 22px;
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    font-weight: 700;
+  }
+  /* At most two postcards per row: one on phones. */
+  .postcards {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 34px 28px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  @media (min-width: 720px) {
+    .postcards {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+</style>

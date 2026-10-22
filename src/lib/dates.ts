@@ -1,11 +1,19 @@
+import type { Locale } from './i18n';
+
 // Frontmatter dates are UTC midnight: format them in UTC so a machine west of
 // Greenwich doesn't show the day before.
-const longFrench = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long', timeZone: 'UTC' });
+const long: Record<Locale, Intl.DateTimeFormat> = {
+  fr: new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long', timeZone: 'UTC' }),
+  en: new Intl.DateTimeFormat('en-GB', { dateStyle: 'long', timeZone: 'UTC' }),
+};
 
-/** A date as French prose: « 15 septembre 2026 », « 1er octobre 2026 ». */
-export function formatDate(date: Date): string {
-  const text = longFrench.format(date);
-  return date.getUTCDate() === 1 ? text.replace(/^1 /, '1er ') : text;
+/**
+ * A date as prose: « 15 septembre 2026 », « 1er octobre 2026 » in French,
+ * "1 October 2026" in English.
+ */
+export function formatDate(date: Date, locale: Locale): string {
+  const text = long[locale].format(date);
+  return locale === 'fr' && date.getUTCDate() === 1 ? text.replace(/^1 /, '1er ') : text;
 }
 
 /** A date as `YYYY-MM-DD`, for `<time datetime>`. */

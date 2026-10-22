@@ -1,31 +1,35 @@
 ---
 import { formatDate, isoDate } from '../lib/dates';
-import { getPostTags, readingMinutes, type Post } from '../lib/posts';
+import { postPath, ui } from '../lib/i18n';
+import { getPostTags, readingMinutes, type PostView } from '../lib/posts';
 
 interface Props {
-  post: Post;
+  /** The Post, in the language of the page. */
+  view: PostView;
   /** A featured postcard spans the whole grid, with a bigger title. */
   featured?: boolean;
 }
 
-const { post, featured = false } = Astro.props;
-const { title, description, publishedAt } = post.data;
-const tags = await getPostTags(post);
+const { view, featured = false } = Astro.props;
+const { locale, post, text } = view;
+const { title, description } = text.data;
+const { publishedAt } = post.data;
+const tags = (await getPostTags(post)).map((tag) => tag.data[locale]);
 ---
 
 <li class:list={['postcard', { featured }]}>
   <h3>
-    <a href={`/${post.id}/`}>{title}</a>
+    <a href={postPath(locale, post.id)}>{title}</a>
   </h3>
   <p class="description">{description}</p>
   <p class="postmark">
-    <time datetime={isoDate(publishedAt)}>{formatDate(publishedAt)}</time>
-    <span>{readingMinutes(post.body)} min de lecture</span>
-    <span>{tags.map((tag) => `#${tag.data.fr}`).join(' ')}</span>
+    <time datetime={isoDate(publishedAt)}>{formatDate(publishedAt, locale)}</time>
+    <span>{ui[locale].readingTime(readingMinutes(text.body))}</span>
+    <span>{tags.map((tag) => `#${tag}`).join(' ')}</span>
   </p>
   {/* The first Tag, already read in the postmark. */}
   <span class="stamp" aria-hidden="true">
-    {tags[0].data.fr}
+    {tags[0]}
   </span>
 </li>
 

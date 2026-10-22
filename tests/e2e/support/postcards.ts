@@ -9,9 +9,15 @@ export interface Postcard {
   spansGrid: boolean;
 }
 
-/** The home page's postcards, in reading order, with where they sit in the grid. */
-export async function homePostcards(page: Page): Promise<Postcard[]> {
-  const list = page.getByRole('region', { name: 'Dernières nouvelles' }).getByRole('list');
+/**
+ * The home page's postcards, in reading order, with where they sit in the grid.
+ * The list is the region named « Dernières nouvelles », or « Latest news » in English.
+ */
+export async function homePostcards(
+  page: Page,
+  region: 'Dernières nouvelles' | 'Latest news' = 'Dernières nouvelles',
+): Promise<Postcard[]> {
+  const list = page.getByRole('region', { name: region }).getByRole('list');
   return list.evaluate((grid) =>
     [...grid.children].map((card) => {
       const box = card as HTMLElement;
