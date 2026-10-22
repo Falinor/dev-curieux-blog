@@ -4,7 +4,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 // Served for every unknown URL, with a 404 status: by `astro preview`, and by
 // Workers static assets (`not_found_handling: "404-page"` in wrangler.jsonc).
 // A postcard sent back: it overlaps the horizon like a Post's title card.
-// Search engines must not index it.
+// Search engines must not index it (`noindex`).
 const lead =
   'Je ne trouve rien à cette adresse : le lien est peut-être cassé, ou la page a dérivé ailleurs.';
 ---
