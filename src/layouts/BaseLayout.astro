@@ -18,6 +18,14 @@ const locale = pageLocale(Astro.currentLocale);
 // page has no counterpart (a Post without a Translation, the 404 page).
 const other = otherLocale(locale);
 const counterpart = alternates?.[other] ?? homePath(other);
+// For search engines: both versions, with French, the original, as the default.
+const hreflangs = alternates
+  ? [
+      ['fr', alternates.fr],
+      ['en', alternates.en],
+      ['x-default', alternates.fr],
+    ].map(([hreflang, path]) => ({ hreflang, href: new URL(path!, Astro.site).href }))
+  : [];
 ---
 
 <!doctype html>
@@ -26,6 +34,9 @@ const counterpart = alternates?.[other] ?? homePath(other);
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
+    {hreflangs.map(({ hreflang, href }) => (
+      <link rel="alternate" hreflang={hreflang} href={href} />
+    ))}
     <Font cssVariable="--font-display" preload />
     <Font cssVariable="--font-body" preload />
     <Font cssVariable="--font-mono" preload />
