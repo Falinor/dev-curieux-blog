@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdir, mkdtemp, readdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { chmod, mkdir, mkdtemp, readdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { delimiter, join } from 'node:path';
 import { test, type TestContext } from 'node:test';
 import { translatePosts, translationStatus, type Translator } from './translation.ts';
 
@@ -82,6 +82,38 @@ function cli(args: string[], contentDir: string, { path = process.env.PATH, cwd 
     cwd,
   });
 }
+
+// A stand-in for the `claude` command, first on the returned PATH: it records the
+// French Post it gets on stdin, prints `output` as `claude -p --output-format json`
+// does, and exits with `exitCode`. The real command is never run by tests.
+async function fakeClaude(t: TestContext, output: object, exitCode = 0) {
+  const bin = await mkdtemp(join(tmpdir(), 'fake-claude-'));
+  t.after(() => rm(bin, { recursive: true, force: true }));
+  const log = join(bin, 'received.json');
+  await writeFile(log, '[]');
+  const script = `#!${process.execPath}
+const { readFileSync, writeFileSync } = require('node:fs');
+const log = ${JSON.stringify(log)};
+const received = JSON.parse(readFileSync(log, 'utf8'));
+writeFileSync(log, JSON.stringify([...received, readFileSync(0, 'utf8')]));
+process.stdout.write(${JSON.stringify(JSON.stringify(output))});
+process.exitCode = ${exitCode};
+`;
+  await writeFile(join(bin, 'claude'), script);
+  await chmod(join(bin, 'claude'), 0o755);
+  return {
+    path: `${bin}${delimiter}${process.env.PATH}`,
+    received: async (): Promise<string[]> => JSON.parse(await readFile(log, 'utf8')),
+  };
+}
+
+// What `claude -p --output-format json --json-schema …` prints when it translated.
+const TRANSLATED = {
+  type: 'result',
+  subtype: 'success',
+  is_error: false,
+  structured_output: { title: 'First post', description: 'My first post.', body: 'Hello world.' },
+};
 
 // An empty directory to use as PATH: no `claude` command, as before installing Claude Code.
 async function emptyDir(t: TestContext): Promise<string> {
@@ -293,4 +325,33 @@ test('translate without Claude Code installed exits zero, warning about every un
     ].join('\n'),
   );
   assert.deepEqual(await snapshot(root), before);
+});
+
+test('translate given Post files writes a Translation for each stale or missing one', async (t) => {
+  const root = await contentRoot(t, {
+    'nouveau.mdx': PREMIER_POST,
+    'deja-traduit.mdx': PREMIER_POST,
+    'deja-traduit.en.mdx': translation(PREMIER_POST_SHA256),
+    'brouillon.mdx': DRAFT_POST,
+  });
+  const claude = await fakeClaude(t, TRANSLATED);
+  const post = (name: string) => join(root, 'posts', name);
+
+  const { status, stdout } = cli(
+    ['translate', post('nouveau.mdx'), post('deja-traduit.mdx'), post('brouillon.mdx')],
+    root,
+    { path: claude.path },
+  );
+
+  assert.equal(status, 0);
+  assert.deepEqual(await claude.received(), [PREMIER_POST]);
+  assert.equal(await readPost(root, 'nouveau.en.mdx'), translation(PREMIER_POST_SHA256));
+  assert.equal(stdout, `Translated ${post('nouveau.mdx')} into ${post('nouveau.en.mdx')}\n`);
+  assert.deepEqual((await readdir(join(root, 'posts'))).toSorted(), [
+    'brouillon.mdx',
+    'deja-traduit.en.mdx',
+    'deja-traduit.mdx',
+    'nouveau.en.mdx',
+    'nouveau.mdx',
+  ]);
 });
