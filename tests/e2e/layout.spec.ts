@@ -25,7 +25,8 @@ const chrome = {
   },
 };
 const french = ['/', '/premier-post/', '/tags/astro/', '/page-inconnue/'];
-const english = ['/en/', '/en/premier-post/', '/en/tags/astro/'];
+// `intersection-observer`'s English title starts with a 64-character word.
+const english = ['/en/', '/en/premier-post/', '/en/intersection-observer/', '/en/tags/astro/'];
 const pages = [...french, ...english];
 const wordsOf = (path: string) => chrome[path.startsWith('/en/') ? 'en' : 'fr'];
 

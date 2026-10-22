@@ -2,5 +2,6 @@
   { "id": "astro", "fr": "Astro", "en": "Astro" },
   { "id": "produit", "fr": "Produit", "en": "Product" },
   { "id": "outillage", "fr": "Outillage", "en": "Tooling" },
-  { "id": "accessibilite", "fr": "Accessibilité", "en": "Accessibility" }
+  { "id": "accessibilite", "fr": "Accessibilité", "en": "Accessibility" },
+  { "id": "navigateur", "fr": "Navigateur", "en": "Browser" }
 ]

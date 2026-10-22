@@ -21,6 +21,7 @@ test('the English home page lists the translated Posts as postcards, Pinned Post
     'An old pinned post',
     'A third post',
     'My first post',
+    'useIntersectionObserverWithResizeObserverAndMutationObserverHook, explained',
   ]);
   expect(cards.filter(({ spansGrid }) => spansGrid).map(({ title }) => title)).toEqual([
     'A recent pinned post',

@@ -26,6 +26,8 @@ h1,
 h2,
 h3 {
   text-wrap: balance;
+  /* A word longer than the line (a long identifier) breaks rather than overflows. */
+  overflow-wrap: break-word;
 }
 
 a {

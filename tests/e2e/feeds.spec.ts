@@ -89,6 +89,7 @@ test('/rss.xml is a valid RSS 2.0 feed of the French Posts, newest first, withou
     ['Un Post épinglé récent', `${site}/epingle-recent/`],
     ['Mon premier Post', `${site}/premier-post/`],
     ['Un Post épinglé ancien', `${site}/epingle-ancien/`],
+    ['IntersectionObserver en vrai', `${site}/intersection-observer/`],
   ]);
   for (const item of feed.items) {
     expect(item.guid, item.title).toBe(item.link);
@@ -122,6 +123,10 @@ test('/en/rss.xml is a valid RSS 2.0 feed of the Translations, newest first, wit
     ['A recent pinned post', `${site}/en/epingle-recent/`],
     ['My first post', `${site}/en/premier-post/`],
     ['An old pinned post', `${site}/en/epingle-ancien/`],
+    [
+      'useIntersectionObserverWithResizeObserverAndMutationObserverHook, explained',
+      `${site}/en/intersection-observer/`,
+    ],
   ]);
   for (const item of feed.items) {
     expect(item.guid, item.title).toBe(item.link);
