@@ -1,0 +1,243 @@
+---
+import { formatDate, isoDate } from '../lib/dates';
+import { getPostTags, readingMinutes, type Post } from '../lib/posts';
+
+// A Post as readers see it: a title postcard overlapping the horizon of the
+// scene, then the body (the default slot) on a sheet.
+
+interface Props {
+  post: Post;
+}
+
+const { post } = Astro.props;
+const { title, description, publishedAt, updatedAt } = post.data;
+const tags = await getPostTags(post);
+
+// Where readers can react. The address is shown as text, not as a link.
+const linkedin = 'https://www.linkedin.com/in/andrea-gueugnaut/';
+const email = 'contact@curieux.dev';
+---
+
+<article>
+  <header class="title-card">
+    <p class="meta">
+      <span>
+        Publié le <time datetime={isoDate(publishedAt)}>{formatDate(publishedAt)}</time>
+      </span>
+      {updatedAt && (
+        <span>
+          Mis à jour le <time datetime={isoDate(updatedAt)}>{formatDate(updatedAt)}</time>
+        </span>
+      )}
+      <span>{readingMinutes(post.body)} min de lecture</span>
+    </p>
+    <h1>{title}</h1>
+    <p class="lead">{description}</p>
+    <ul class="chips" aria-label="Tags">
+      {tags.map((tag) => (
+        <li>
+          <a href={`/tags/${tag.id}/`}>
+            <span aria-hidden="true">#</span>
+            {tag.data.fr}
+          </a>
+        </li>
+      ))}
+    </ul>
+  </header>
+  <div class="sheet">
+    <slot />
+    <section class="react" aria-labelledby="reagir">
+      <h2 id="reagir">Réagir</h2>
+      <p>Une remarque, une erreur, une idée&nbsp;? Écrivez-moi.</p>
+      <p class="contact">
+        <a href={linkedin}>LinkedIn</a>
+        <span class="email">{email}</span>
+      </p>
+    </section>
+  </div>
+</article>
+
+<style>
+  article {
+    position: relative;
+    /* Inside the sheet's padding, a line of body text holds about 68 characters. */
+    max-width: 740px;
+    /* The title postcard overlaps the horizon, over the waves. */
+    margin: -70px auto 0;
+  }
+
+  .title-card {
+    padding: 26px 28px;
+    background: var(--card);
+    color: var(--ink);
+    border: var(--outline);
+    box-shadow: var(--shadow-lg);
+    transform: rotate(-1deg);
+  }
+  .meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 14px;
+    margin: 0;
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+  }
+  h1 {
+    margin: 8px 0 12px;
+    font-family: var(--font-display);
+    font-size: clamp(1.9rem, 4.6vw, 3rem);
+    font-weight: 800;
+    line-height: 1.04;
+    letter-spacing: -0.03em;
+  }
+  .lead {
+    margin: 0;
+    color: var(--muted);
+    font-size: 1.12rem;
+  }
+  /* Tag chips: stickers, like the header's. */
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 16px 0 0;
+    padding: 0;
+    list-style: none;
+  }
+  .chips a {
+    display: block;
+    padding: 1px 8px;
+    background: var(--sun);
+    color: var(--on-sun);
+    border: var(--outline);
+    box-shadow: var(--shadow-sm);
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-decoration: none;
+  }
+  .chips a:hover {
+    text-decoration: underline;
+  }
+
+  .sheet {
+    margin-top: 34px;
+    padding: clamp(20px, 4vw, 44px);
+    background: var(--card);
+    color: var(--ink);
+    border: var(--outline);
+    box-shadow: var(--shadow-lg);
+    font-size: 1.1875rem;
+    line-height: 1.72;
+    overflow-wrap: break-word;
+  }
+
+  /* The body, written in MDX: running text, never tactile. */
+  .sheet :global(:where(p, ul, ol, blockquote, pre, h2, h3, h4)) {
+    margin-block: 0;
+  }
+  .sheet > :global(* + *) {
+    margin-top: 1.1em;
+  }
+  .sheet :global(h2),
+  .sheet :global(h3) {
+    font-family: var(--font-display);
+    letter-spacing: -0.01em;
+    line-height: 1.2;
+  }
+  .sheet > :global(h2) {
+    margin-top: 2em;
+    font-size: 1.6rem;
+  }
+  .sheet > :global(h3) {
+    margin-top: 1.6em;
+    font-size: 1.3rem;
+  }
+  .sheet :global(:where(ul, ol)) {
+    padding-left: 1.2em;
+  }
+  .sheet :global(li + li) {
+    margin-top: 0.4em;
+  }
+  .sheet :global(code) {
+    padding: 0.1em 0.35em;
+    background: var(--rule);
+    border-radius: 4px;
+    font-family: var(--font-mono);
+    font-size: 0.86em;
+  }
+
+  /*
+   * Code blocks are cards. Their colors come from the highlighting theme; a long
+   * line scrolls inside the card, never wraps and never widens the page.
+   */
+  .sheet :global(pre) {
+    max-width: 100%;
+    padding: 18px 20px;
+    border: var(--outline);
+    box-shadow: var(--shadow);
+    font-family: var(--font-mono);
+    font-size: 0.875rem;
+    line-height: 1.6;
+    tab-size: 2;
+  }
+  .sheet :global(pre code) {
+    padding: 0;
+    background: none;
+    font-size: inherit;
+  }
+
+  .react {
+    margin-top: 48px;
+    padding-top: 20px;
+    border-top: 2px dotted var(--rule);
+  }
+  .react h2 {
+    margin: 0;
+    font-size: 1.3rem;
+  }
+  .react p {
+    margin: 6px 0 0;
+  }
+  .contact {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px 18px;
+  }
+  .contact a {
+    padding: 4px 14px;
+    background: var(--coral);
+    color: var(--on-sun);
+    border: var(--outline);
+    box-shadow: var(--shadow-sm);
+    font-weight: 700;
+    text-decoration: none;
+  }
+  .contact a:hover {
+    text-decoration: underline;
+  }
+  /* One click selects the whole address, ready to copy. */
+  .email {
+    font-family: var(--font-mono);
+    user-select: all;
+  }
+
+  .sheet :global(img) {
+    display: block;
+    max-width: 100%;
+    height: auto;
+  }
+
+  /* Quotes are postcards: a tilted sun card. */
+  .sheet :global(blockquote) {
+    margin-inline: 0;
+    padding: 14px 18px;
+    background: var(--sun);
+    color: var(--on-sun);
+    border: var(--outline);
+    box-shadow: var(--shadow-sm);
+    transform: rotate(-0.6deg);
+  }
+</style>
