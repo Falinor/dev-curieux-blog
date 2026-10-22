@@ -1,4 +1,5 @@
 import type { Locator } from '@playwright/test';
+import { contrastRatio } from './colors';
 
 export interface LowContrast {
   text: string;
@@ -37,19 +38,6 @@ export async function lowContrastTexts(containers: Locator): Promise<LowContrast
       1,
     ];
 
-    function luminance([r, g, b]: Rgba): number {
-      const [R, G, B] = [r, g, b].map((c) => {
-        const s = c / 255;
-        return s <= 0.04045 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
-      }) as [number, number, number];
-      return 0.2126 * R + 0.7152 * G + 0.0722 * B;
-    }
-
-    const ratio = (a: Rgba, b: Rgba) => {
-      const [la, lb] = [luminance(a), luminance(b)];
-      return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
-    };
-
     /** The colors a text may sit on, from its element up. */
     function backdrops(element: Element): Rgba[] {
       const translucent: Rgba[] = [];
@@ -81,9 +69,12 @@ export async function lowContrastTexts(containers: Locator): Promise<LowContrast
       const size = parseFloat(style.fontSize);
       const large = size >= 24 || (size >= 18.66 && +style.fontWeight >= 700);
       const color = parse(style.color);
-      const worst = Math.min(...backdrops(element).map((backdrop) => ratio(color, backdrop)));
-      return [{ text: ownText, ratio: Math.round(worst * 100) / 100, required: large ? 3 : 4.5 }];
+      return [{ text: ownText, color, backdrops: backdrops(element), required: large ? 3 : 4.5 }];
     });
   });
-  return found.filter(({ ratio, required }) => ratio < required);
+  return found.flatMap(({ text, color, backdrops, required }) => {
+    const worst = Math.min(...backdrops.map((backdrop) => contrastRatio(color, backdrop)));
+    const ratio = Math.round(worst * 100) / 100;
+    return ratio < required ? [{ text, ratio, required }] : [];
+  });
 }

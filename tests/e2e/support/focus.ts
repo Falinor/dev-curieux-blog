@@ -1,4 +1,5 @@
 import type { Page } from '@playwright/test';
+import { contrastRatio, type Rgb } from './colors';
 
 export interface WeakFocusRing {
   /** The focused element: its tag and the start of its text. */
@@ -57,7 +58,8 @@ export async function weakFocusRings(page: Page): Promise<WeakFocusRing[]> {
 
     const clip = around(target.box, page.viewportSize()!);
     const focused = await page.screenshot({ clip, animations: 'disabled' });
-    const ratios = await page.evaluate(
+    // Per ray, each pixel focused and unfocused.
+    const rays: [Rgb, Rgb][][] = await page.evaluate(
       async ({ png, area, box }) => {
         const response = await fetch(`data:image/png;base64,${png}`);
         const bitmap = await createImageBitmap(await response.blob());
@@ -69,13 +71,11 @@ export async function weakFocusRings(page: Page): Promise<WeakFocusRing[]> {
 
         // Runs in the page: its helpers must live inside it.
         // oxlint-disable-next-line unicorn/consistent-function-scoping
-        const luminance = (data: Uint8ClampedArray, i: number) => {
-          const [r, g, b] = [data[i]!, data[i + 1]!, data[i + 2]!].map((c) => {
-            const s = c / 255;
-            return s <= 0.04045 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
-          }) as [number, number, number];
-          return 0.2126 * r + 0.7152 * g + 0.0722 * b;
-        };
+        const pixel = ({ data }: ImageData, i: number): [number, number, number] => [
+          data[i]!,
+          data[i + 1]!,
+          data[i + 2]!,
+        ];
 
         const centre = { x: box.x + box.width / 2 - area.x, y: box.y + box.height / 2 - area.y };
         const directions = [
@@ -89,20 +89,25 @@ export async function weakFocusRings(page: Page): Promise<WeakFocusRing[]> {
           [1, -1],
         ] as const;
         return directions.map(([dx, dy]) => {
-          let best = 1;
+          const ray: [[number, number, number], [number, number, number]][] = [];
           for (let t = 0; ; t++) {
             const px = Math.round(centre.x + dx * t);
             const py = Math.round(centre.y + dy * t);
             if (px < 0 || py < 0 || px >= after.width || py >= after.height) break;
-            const a = luminance(after.data, (py * after.width + px) * 4);
-            const b = luminance(before.data, ((area.y + py) * before.width + area.x + px) * 4);
-            best = Math.max(best, (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05));
+            ray.push([
+              pixel(after, (py * after.width + px) * 4),
+              pixel(before, ((area.y + py) * before.width + area.x + px) * 4),
+            ]);
           }
-          return Math.round(best * 100) / 100;
+          return ray;
         });
       },
       { png: focused.toString('base64'), area: clip, box: target.box },
     );
+    const ratios = rays.map((ray) => {
+      const best = ray.reduce((most, [a, b]) => Math.max(most, contrastRatio(a, b)), 1);
+      return Math.round(best * 100) / 100;
+    });
     if (ratios.some((ratio) => ratio < 3)) weak.push({ element: target.element, ratios });
   }
   return weak;
