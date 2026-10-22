@@ -115,6 +115,17 @@ const TRANSLATED = {
   structured_output: { title: 'First post', description: 'My first post.', body: 'Hello world.' },
 };
 
+// Runs git in `repo`, returning its output.
+function git(repo: string, ...args: string[]): string {
+  const run = spawnSync('git', args, { cwd: repo, encoding: 'utf8' });
+  assert.equal(run.status, 0, run.stderr);
+  return run.stdout;
+}
+
+// The files in `repo`'s index that differ from its last commit, as `git commit` would record them.
+const staged = (repo: string) =>
+  git(repo, 'diff', '--cached', '--name-only').split('\n').filter(Boolean);
+
 // An empty directory to use as PATH: no `claude` command, as before installing Claude Code.
 async function emptyDir(t: TestContext): Promise<string> {
   const dir = await mkdtemp(join(tmpdir(), 'empty-'));
@@ -398,4 +409,29 @@ test('translate rejects an answer with an empty or missing field and writes noth
     assert.match(stderr, /: claude answered without a title, description or body$/m);
   }
   assert.deepEqual((await readdir(join(root, 'posts'))).toSorted(), ['modifie.mdx', 'nouveau.mdx']);
+});
+
+test('translate --stage adds the written Translations to the commit in progress', async (t) => {
+  // A repository whose root is the content root, with the Posts the author staged.
+  const repo = await contentRoot(t, { 'nouveau.mdx': PREMIER_POST, 'brouillon.mdx': DRAFT_POST });
+  git(repo, 'init', '--quiet');
+  git(repo, 'add', 'posts');
+  const claude = await fakeClaude(t, TRANSLATED);
+
+  // As the pre-commit hook runs it: staged Post paths, relative to the repository root.
+  const { status } = cli(
+    ['translate', '--stage', 'posts/nouveau.mdx', 'posts/brouillon.mdx'],
+    repo,
+    {
+      path: claude.path,
+      cwd: repo,
+    },
+  );
+
+  assert.equal(status, 0);
+  assert.deepEqual(staged(repo), [
+    'posts/brouillon.mdx',
+    'posts/nouveau.en.mdx',
+    'posts/nouveau.mdx',
+  ]);
 });
