@@ -22,9 +22,11 @@ export default defineConfig({
   integrations: [mdx()],
   env: {
     schema: {
-      // Cloudflare Web Analytics site token. Set only for production builds:
-      // without it, no page loads the beacon.
+      // Cloudflare Web Analytics site token: without it, no page loads the beacon.
       CF_BEACON_TOKEN: envField.string({ context: 'server', access: 'public', optional: true }),
+      // The branch Workers Builds is building (it sets the variable itself). A
+      // branch other than `main` is a preview: its pages never load the beacon.
+      WORKERS_CI_BRANCH: envField.string({ context: 'server', access: 'public', optional: true }),
     },
   },
   fonts: [
