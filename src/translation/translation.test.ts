@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test, type TestContext } from 'node:test';
@@ -145,7 +145,7 @@ test('translate given Post files sends only those that are stale or missing, onc
   const { translator, received } = fakeTranslator();
   const post = (name: string) => join(root, 'posts', name);
 
-  await translatePosts(translator, {
+  const report = await translatePosts(translator, {
     posts: [
       post('nouveau.mdx'),
       post('deja-traduit.mdx'),
@@ -157,6 +157,10 @@ test('translate given Post files sends only those that are stale or missing, onc
   assert.deepEqual(received, [PREMIER_POST]);
   assert.equal(await readPost(root, 'nouveau.en.mdx'), translation(PREMIER_POST_SHA256));
   assert.deepEqual(
+    report.translated.map(({ translation }) => translation),
+    [post('nouveau.en.mdx')],
+  );
+  assert.deepEqual(
     (await translationStatus(root))
       .map(({ slug, status }) => ({ slug, status }))
       .toSorted((a, b) => a.slug.localeCompare(b.slug)),
@@ -167,3 +171,35 @@ test('translate given Post files sends only those that are stale or missing, onc
     ],
   );
 });
+
+test('an unavailable translator leaves every file untouched and is reported, not thrown', async (t) => {
+  const root = await contentRoot(t, {
+    'nouveau.mdx': PREMIER_POST,
+    'modifie.mdx': REVISED_POST,
+    'modifie.en.mdx': translation(PREMIER_POST_SHA256),
+  });
+  const before = await snapshot(root);
+  const translator: Translator = async () => ({ unavailable: 'claude: command not found' });
+
+  const report = await translatePosts(translator, { contentDir: root });
+
+  assert.deepEqual(await snapshot(root), before);
+  assert.deepEqual(report.translated, []);
+  assert.deepEqual(
+    report.unavailable
+      .map(({ slug, reason }) => ({ slug, reason }))
+      .toSorted((a, b) => a.slug.localeCompare(b.slug)),
+    [
+      { slug: 'modifie', reason: 'claude: command not found' },
+      { slug: 'nouveau', reason: 'claude: command not found' },
+    ],
+  );
+});
+
+// Every file under `posts/` with its contents.
+async function snapshot(root: string): Promise<Record<string, string>> {
+  const names = await readdir(join(root, 'posts'));
+  return Object.fromEntries(
+    await Promise.all(names.map(async (name) => [name, await readPost(root, name)])),
+  );
+}

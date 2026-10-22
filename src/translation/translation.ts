@@ -31,6 +31,14 @@ export interface English {
  */
 export type Translator = (frenchPost: string) => Promise<English | { unavailable: string }>;
 
+/** What `translatePosts` did; each Post keeps the status it had before translating. */
+export interface TranslationReport {
+  /** Posts whose Translation was written. */
+  translated: PostTranslation[];
+  /** Posts left untouched because the translator was unavailable: a warning, not an error. */
+  unavailable: (PostTranslation & { reason: string })[];
+}
+
 const TRANSLATION_SUFFIX = '.en.mdx';
 
 /** Every non-Draft Post under `<contentDir>/posts/` with its Translation's state. */
@@ -47,21 +55,28 @@ export async function translationStatus(contentDir: string): Promise<PostTransla
  * Sends every stale or missing Post to the translator and writes its Translation,
  * carrying the Post's current fingerprint as `sourceHash`. Drafts and fresh Posts
  * are skipped. Takes every Post of a content root, or a list of Post files (paths
- * as given, duplicates ignored).
+ * as given, duplicates ignored). When the translator is unavailable for a Post, its
+ * files stay as they were and the Post is reported in `unavailable`.
  */
 export async function translatePosts(
   translator: Translator,
   from: { contentDir: string } | { posts: string[] },
-): Promise<void> {
+): Promise<TranslationReport> {
+  const report: TranslationReport = { translated: [], unavailable: [] };
   const posts = 'posts' in from ? new Set(from.posts) : await postFiles(from.contentDir);
   for (const post of posts) {
     const target = await postTranslation(post);
     if (!target || target.status === 'fresh') continue;
     const source = await readFile(post);
     const english = await translator(source.toString('utf8'));
-    if ('unavailable' in english) continue;
+    if ('unavailable' in english) {
+      report.unavailable.push({ ...target, reason: english.unavailable });
+      continue;
+    }
     await writeFile(target.translation, translationFile(english, fingerprint(source)));
+    report.translated.push(target);
   }
+  return report;
 }
 
 async function postFiles(contentDir: string): Promise<string[]> {
