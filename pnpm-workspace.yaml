@@ -3,3 +3,6 @@ allowBuilds:
   esbuild: true
   lefthook: true
   workerd: true
+overrides:
+  # GHSA-px8p-9vwx-vf98: satori pins fflate 0.7.3. Drop this once it depends on 0.7.5 or later.
+  'fflate@<0.7.5': 0.7.5
