@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { mkdir, mkdtemp, readdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
+import { spawnSync } from 'node:child_process';
 import { join } from 'node:path';
 import { test, type TestContext } from 'node:test';
 import { translatePosts, translationStatus, type Translator } from './translation.ts';
@@ -40,6 +41,10 @@ function fakeTranslator(): { translator: Translator; received: string[] } {
   };
   return { translator, received };
 }
+
+const unavailableTranslator: Translator = async () => ({
+  unavailable: 'claude: command not found',
+});
 
 // A content root (same layout as `BLOG_CONTENT_DIR`) holding the given files
 // under `posts/`, removed after the test.
@@ -157,7 +162,7 @@ test('translate given Post files sends only those that are stale or missing, onc
   assert.deepEqual(received, [PREMIER_POST]);
   assert.equal(await readPost(root, 'nouveau.en.mdx'), translation(PREMIER_POST_SHA256));
   assert.deepEqual(
-    report.translated.map(({ translation }) => translation),
+    report.translated.map((written) => written.translation),
     [post('nouveau.en.mdx')],
   );
   assert.deepEqual(
@@ -179,9 +184,7 @@ test('an unavailable translator leaves every file untouched and is reported, not
     'modifie.en.mdx': translation(PREMIER_POST_SHA256),
   });
   const before = await snapshot(root);
-  const translator: Translator = async () => ({ unavailable: 'claude: command not found' });
-
-  const report = await translatePosts(translator, { contentDir: root });
+  const report = await translatePosts(unavailableTranslator, { contentDir: root });
 
   assert.deepEqual(await snapshot(root), before);
   assert.deepEqual(report.translated, []);
@@ -203,3 +206,55 @@ async function snapshot(root: string): Promise<Record<string, string>> {
     await Promise.all(names.map(async (name) => [name, await readPost(root, name)])),
   );
 }
+
+// Runs the Translation command line on a content root, as CI and package scripts do.
+function cli(args: string[], contentDir: string) {
+  const script = join(import.meta.dirname, 'cli.ts');
+  return spawnSync(process.execPath, [script, ...args], {
+    env: { ...process.env, BLOG_CONTENT_DIR: contentDir },
+    encoding: 'utf8',
+  });
+}
+
+test('check exits non-zero naming every Post with a stale or missing Translation', async (t) => {
+  const root = await contentRoot(t, {
+    'nouveau.mdx': PREMIER_POST,
+    'deja-traduit.mdx': PREMIER_POST,
+    'deja-traduit.en.mdx': translation(PREMIER_POST_SHA256),
+    'modifie.mdx': REVISED_POST,
+    'modifie.en.mdx': translation(PREMIER_POST_SHA256),
+    'brouillon.mdx': PREMIER_POST.replace('tags: [astro]', 'tags: [astro]\ndraft: true'),
+  });
+
+  const { status, stderr } = cli(['check'], root);
+
+  assert.equal(status, 1);
+  assert.equal(
+    stderr,
+    [
+      'Translation check failed. These Posts need a new Translation:',
+      `  ${join(root, 'posts', 'modifie.mdx')}: stale`,
+      `  ${join(root, 'posts', 'nouveau.mdx')}: missing`,
+      '',
+    ].join('\n'),
+  );
+});
+
+test('check exits zero when every non-Draft Post has a fresh Translation', async (t) => {
+  const root = await contentRoot(t, {
+    'deja-traduit.mdx': PREMIER_POST,
+    'deja-traduit.en.mdx': translation(PREMIER_POST_SHA256),
+    'brouillon.mdx': PREMIER_POST.replace('tags: [astro]', 'tags: [astro]\ndraft: true'),
+  });
+
+  const { status, stderr } = cli(['check'], root);
+
+  assert.equal(stderr, '');
+  assert.equal(status, 0);
+});
+
+test('an unknown command exits non-zero instead of passing silently', async (t) => {
+  const root = await contentRoot(t, { 'premier-post.mdx': PREMIER_POST });
+
+  assert.equal(cli(['chek'], root).status, 2);
+});

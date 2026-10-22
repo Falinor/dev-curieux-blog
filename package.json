@@ -16,7 +16,8 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test:e2e": "playwright test",
-    "test:unit": "node --test 'src/translation/**/*.test.ts'"
+    "test:unit": "node --test 'src/translation/**/*.test.ts'",
+    "translations:check": "node src/translation/cli.ts check"
   },
   "dependencies": {
     "@astrojs/mdx": "8.1.0",
