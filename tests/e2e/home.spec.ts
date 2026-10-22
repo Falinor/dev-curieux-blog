@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { homePostcards } from './support/postcards';
+import { homePostcards, rows } from './support/postcards';
 
 // Dusk is the reference design: say so now, before the light theme exists.
 test.use({ colorScheme: 'dark' });
@@ -35,5 +35,18 @@ test('the Pinned Posts come first as featured postcards, newest first, then ever
   expect(cards.filter(({ spansGrid }) => spansGrid).map(({ title }) => title)).toEqual([
     'Un Post épinglé récent',
     'Un Post épinglé ancien',
+  ]);
+});
+
+test('at desktop width no row holds more than two postcards', async ({ page }) => {
+  await page.setViewportSize({ width: 1920, height: 1080 });
+  await page.goto('/');
+
+  // Two featured postcards, then three others: two on a row, one on the next.
+  expect(rows(await homePostcards(page))).toEqual([
+    ['Un Post épinglé récent'],
+    ['Un Post épinglé ancien'],
+    ['Un troisième Post', 'Un second Post'],
+    ['Mon premier Post'],
   ]);
 });
