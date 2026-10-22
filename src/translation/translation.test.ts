@@ -380,3 +380,22 @@ test('translate when Claude Code is not logged in warns with its message and wri
   );
   assert.deepEqual(await readdir(join(root, 'posts')), ['nouveau.mdx']);
 });
+
+test('translate rejects an answer with an empty or missing field and writes nothing', async (t) => {
+  const root = await contentRoot(t, { 'nouveau.mdx': PREMIER_POST, 'modifie.mdx': REVISED_POST });
+  const emptyTitle = { ...TRANSLATED.structured_output, title: ' ' };
+  const claude = await fakeClaude(t, { ...TRANSLATED, structured_output: emptyTitle });
+  const noAnswer = await fakeClaude(t, { ...TRANSLATED, structured_output: undefined });
+  const post = (name: string) => join(root, 'posts', name);
+
+  const results = [
+    cli(['translate', post('nouveau.mdx')], root, { path: claude.path }),
+    cli(['translate', post('modifie.mdx')], root, { path: noAnswer.path }),
+  ];
+
+  for (const { status, stderr } of results) {
+    assert.equal(status, 0);
+    assert.match(stderr, /: claude answered without a title, description or body$/m);
+  }
+  assert.deepEqual((await readdir(join(root, 'posts'))).toSorted(), ['modifie.mdx', 'nouveau.mdx']);
+});
