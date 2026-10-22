@@ -95,6 +95,37 @@ test('a Post body sits on a sheet, with display headings, a quote card and inlin
   await expect(inlineCode).toHaveCSS('background-color', dusk.rule);
 });
 
+test('a Post body is set at 18 to 20px, with 60 to 75 characters per line', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto('/second-post/');
+  const paragraph = page.getByRole('article').getByRole('paragraph').filter({
+    hasText: 'Cette phrase de remplissage',
+  });
+
+  const fontSize = await paragraph
+    .first()
+    .evaluate((p) => Number.parseFloat(getComputedStyle(p).fontSize));
+  expect(fontSize).toBeGreaterThanOrEqual(18);
+  expect(fontSize).toBeLessThanOrEqual(20);
+
+  // Characters on each line of the first paragraph, its last (short) line aside.
+  const lines = await paragraph.first().evaluate((p) => {
+    const text = p.firstChild!;
+    const range = document.createRange();
+    const perLine = new Map<number, number>();
+    for (let i = 0; i < text.textContent!.length; i++) {
+      range.setStart(text, i);
+      range.setEnd(text, i + 1);
+      const top = Math.round(range.getClientRects()[0]?.top ?? -1);
+      perLine.set(top, (perLine.get(top) ?? 0) + 1);
+    }
+    return [...perLine.values()].slice(0, -1);
+  });
+  expect(lines.length).toBeGreaterThan(3);
+  expect(Math.min(...lines)).toBeGreaterThanOrEqual(60);
+  expect(Math.max(...lines)).toBeLessThanOrEqual(75);
+});
+
 test('a code block is a card highlighted in the brand colors, and a long line scrolls instead of wrapping', async ({
   page,
 }) => {
