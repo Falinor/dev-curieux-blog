@@ -1,4 +1,4 @@
-import { defineConfig, fontProviders } from 'astro/config';
+import { defineConfig, envField, fontProviders } from 'astro/config';
 import mdx from '@astrojs/mdx';
 
 /**
@@ -20,6 +20,13 @@ function fontsource(name, cssVariable, file, weight, fallback) {
 export default defineConfig({
   site: 'https://blog.curieux.dev',
   integrations: [mdx()],
+  env: {
+    schema: {
+      // Cloudflare Web Analytics site token. Set only for production builds:
+      // without it, no page loads the beacon.
+      CF_BEACON_TOKEN: envField.string({ context: 'server', access: 'public', optional: true }),
+    },
+  },
   fonts: [
     fontsource(
       'Bricolage Grotesque',
