@@ -1,24 +1,48 @@
 ---
-import { getCollection, render, type CollectionEntry } from 'astro:content';
+import { render } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
+import { formatDate, isoDate } from '../lib/dates';
+import { getPostTags, getPublishedPosts, readingMinutes, type Post } from '../lib/posts';
 
 export async function getStaticPaths() {
-  const posts = await getCollection('posts');
+  const posts = await getPublishedPosts();
   return posts.map((post) => ({ params: { slug: post.id }, props: { post } }));
 }
 
 interface Props {
-  post: CollectionEntry<'posts'>;
+  post: Post;
 }
 
 const { post } = Astro.props;
+const { title, publishedAt, updatedAt } = post.data;
+const tags = await getPostTags(post);
 const { Content } = await render(post);
 ---
 
-<BaseLayout title={post.data.title}>
+<BaseLayout title={title}>
   <main>
     <article>
-      <h1>{post.data.title}</h1>
+      <header>
+        <h1>{title}</h1>
+        <p>
+          <span>
+            Publié le <time datetime={isoDate(publishedAt)}>{formatDate(publishedAt)}</time>
+          </span>
+          {updatedAt && (
+            <span>
+              Mis à jour le <time datetime={isoDate(updatedAt)}>{formatDate(updatedAt)}</time>
+            </span>
+          )}
+          <span>{readingMinutes(post.body)} min de lecture</span>
+        </p>
+        <ul aria-label="Tags">
+          {tags.map((tag) => (
+            <li>
+              <a href={`/tags/${tag.id}/`}>{tag.data.fr}</a>
+            </li>
+          ))}
+        </ul>
+      </header>
       <Content />
     </article>
   </main>

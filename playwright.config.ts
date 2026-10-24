@@ -4,7 +4,8 @@ import { defineConfig, devices } from '@playwright/test';
 // real build in `dist/` is never replaced by test content. `--ignore-lock` keeps
 // the preview server in the foreground (Astro backgrounds it when an agent runs
 // it) and lets it run next to a preview the author already started.
-const port = 4322;
+// `E2E_PORT` lets parallel checkouts run their suites side by side.
+const port = Number(process.env.E2E_PORT) || 4322;
 const outDir = 'dist-e2e';
 
 export default defineConfig({

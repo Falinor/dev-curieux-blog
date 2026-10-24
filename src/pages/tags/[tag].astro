@@ -1,0 +1,39 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getPublishedPosts, type Post, type Tag } from '../../lib/posts';
+
+// Every Tag gets a page, even one whose Posts are all Drafts.
+export async function getStaticPaths() {
+  const [tags, posts] = await Promise.all([getCollection('tags'), getPublishedPosts()]);
+  return tags.map((tag) => ({
+    params: { tag: tag.id },
+    props: { tag, posts: posts.filter((post) => post.data.tags.some(({ id }) => id === tag.id)) },
+  }));
+}
+
+interface Props {
+  tag: Tag;
+  posts: Post[];
+}
+
+const { tag, posts } = Astro.props;
+const label = tag.data.fr;
+---
+
+<BaseLayout title={`${label} — Dev curieux`}>
+  <main>
+    <h1>{label}</h1>
+    {posts.length > 0 ? (
+      <ul>
+        {posts.map((post) => (
+          <li>
+            <a href={`/${post.id}/`}>{post.data.title}</a>
+          </li>
+        ))}
+      </ul>
+    ) : (
+      <p>Aucun Post pour l’instant.</p>
+    )}
+  </main>
+</BaseLayout>
