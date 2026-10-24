@@ -5,4 +5,24 @@ publishedAt: 2026-10-05
 tags: [outillage]
 ---
 
-Un troisième Post, pour remplir plus d’une rangée de cartes postales.
+Un troisième Post, pour remplir plus d’une rangée de cartes postales, et pour montrer tout ce qu’un Post peut contenir.
+
+## Le problème
+
+Une traduction faite à la main, je ne la referai pas à chaque correction. Le déclencheur, c’est un hook `pre-commit` géré par lefthook.
+
+> Les brouillons ne sont jamais traduits : je traduis une fois, au moment de publier.
+
+### Le script
+
+```ts
+// Une traduction est périmée quand l’empreinte ne correspond plus.
+export function isStale(post: string, translation: { sourceHash: string }): boolean {
+  return translation.sourceHash !== sha256(post);
+}
+
+const note =
+  'Une très longue ligne de code ne revient jamais à la ligne, même sur un téléphone de quatre cents pixels.';
+```
+
+![Le soleil se couche derrière les vagues](./troisieme-post/coucher-de-soleil.png)

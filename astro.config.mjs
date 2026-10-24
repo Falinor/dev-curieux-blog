@@ -1,5 +1,6 @@
 import { defineConfig, envField, fontProviders } from 'astro/config';
 import mdx from '@astrojs/mdx';
+import { codeTheme } from './src/styles/code-theme.ts';
 
 /**
  * A self-hosted variable font from its Fontsource package: the Latin subset
@@ -20,6 +21,9 @@ function fontsource(name, cssVariable, file, weight, fallback) {
 export default defineConfig({
   site: 'https://blog.curieux.dev',
   integrations: [mdx()],
+  markdown: { shikiConfig: { theme: codeTheme } },
+  // Images in a Post get a `srcset`, so phones download smaller files.
+  image: { layout: 'constrained' },
   env: {
     schema: {
       // Cloudflare Web Analytics site token: without it, no page loads the beacon.
