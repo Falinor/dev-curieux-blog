@@ -13,6 +13,14 @@ test('a Draft has no page at its slug URL', async ({ request }) => {
   expect(response.status()).toBe(404);
 });
 
+test('a Draft has no social image, even with a Translation', async ({ request }) => {
+  for (const path of ['/brouillon/og.png', '/en/brouillon/og.png']) {
+    const response = await request.get(path);
+
+    expect(response.status(), path).toBe(404);
+  }
+});
+
 test('a Draft is absent from the pages of its Tags', async ({ page }) => {
   for (const tag of ['astro', 'produit']) {
     const response = await page.goto(`/tags/${tag}/`);

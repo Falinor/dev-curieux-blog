@@ -39,7 +39,8 @@ export function feedPath(locale: Locale): string {
 /**
  * A page's social image, the 1200×630 PNG link previews show: next to the page,
  * `<page path>og.png` (`/premier-post/og.png`, `/en/og.png`). Post pages have
- * their own; every other page shows its language's home page image.
+ * their own; every other page shows its language's home page image. The
+ * `og.png.ts` endpoints next to the pages draw them (`lib/social-image.ts`).
  */
 export function socialImagePath(pagePath: string): string {
   return `${pagePath}og.png`;
