@@ -3,6 +3,7 @@ import { Font } from 'astro:assets';
 import Analytics from '../components/Analytics.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 import SiteHeader from '../components/SiteHeader.astro';
+import ThemeScript from '../components/ThemeScript.astro';
 import { type Alternates, homePath, otherLocale, pageLocale } from '../lib/i18n';
 import '../styles/global.css';
 
@@ -31,6 +32,7 @@ const hreflangs = alternates
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <ThemeScript />
     <title>{title}</title>
     {hreflangs.map(({ hreflang, href }) => (
       <link rel="alternate" hreflang={hreflang} href={href} />

@@ -1,5 +1,6 @@
 ---
 import { feedPath, homePath, otherLocale, pageLocale, ui } from '../lib/i18n';
+import ThemeToggle from './ThemeToggle.astro';
 import Waves from './Waves.astro';
 
 // The scene at the top of every page: a sunset sky with stars, the sun going
@@ -47,6 +48,9 @@ const other = otherLocale(locale);
             <a href={languageSwitch} hreflang={other} lang={other}>
               {ui[other].languageName}
             </a>
+          </li>
+          <li>
+            <ThemeToggle />
           </li>
         </ul>
       </nav>
@@ -161,6 +165,13 @@ const other = otherLocale(locale);
   }
   nav a:hover {
     text-decoration: underline;
+  }
+  /* The focus halo goes in front of the hard shadow, which stays. */
+  .badge:focus-visible,
+  nav a:focus-visible {
+    box-shadow:
+      0 0 0 2px var(--focus-halo),
+      var(--shadow-sm);
   }
 
   @media (max-width: 600px) {

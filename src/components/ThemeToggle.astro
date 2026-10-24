@@ -1,0 +1,121 @@
+---
+import { pageLocale, ui } from '../lib/i18n';
+
+// Switches between « crépuscule » (dark) and « plein soleil » (light) and keeps
+// the choice on the reader's device; `ThemeScript` applies it on the next pages.
+// The button names the theme it switches to. Both names are in the markup and
+// CSS shows the right one, so it is right from the first paint.
+
+const { toLight, toDark } = ui[pageLocale(Astro.currentLocale)].theme;
+---
+
+<button class="theme-toggle" type="button">
+  <span class="to-light">
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="12" cy="12" r="4.5"></circle>
+      <path d="M12 1.5v3M12 19.5v3M1.5 12h3M19.5 12h3M4.6 4.6l2.1 2.1M17.3 17.3l2.1 2.1M4.6 19.4l2.1-2.1M17.3 6.7l2.1-2.1"></path>
+    </svg>
+    <span class="visually-hidden">{toLight.action}</span>
+    {toLight.name}
+  </span>
+  <span class="to-dark">
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M20.5 14.5A8.5 8.5 0 0 1 9.5 3.5a8.5 8.5 0 1 0 11 11z"></path>
+    </svg>
+    <span class="visually-hidden">{toDark.action}</span>
+    {toDark.name}
+  </span>
+</button>
+
+<script>
+  import { themeStorageKey } from '../lib/theme';
+
+  const root = document.documentElement;
+  const systemDark = matchMedia('(prefers-color-scheme: dark)');
+
+  document.querySelector('.theme-toggle')?.addEventListener('click', () => {
+    const current = root.dataset.theme ?? (systemDark.matches ? 'dark' : 'light');
+    const next = current === 'dark' ? 'light' : 'dark';
+    root.dataset.theme = next;
+    try {
+      localStorage.setItem(themeStorageKey, next);
+    } catch {
+      // Storage is blocked: the choice holds until the reader leaves the page.
+    }
+  });
+</script>
+
+<style>
+  /* A sticker, like the navigation's, but on a card: it is a setting, not a page. */
+  .theme-toggle {
+    display: block;
+    margin: 0;
+    padding: 4px 10px;
+    background: var(--card);
+    color: var(--ink);
+    border: var(--outline);
+    box-shadow: var(--shadow-sm);
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    font-weight: 600;
+    line-height: inherit;
+    cursor: pointer;
+  }
+  .theme-toggle:hover {
+    text-decoration: underline;
+  }
+  /* The focus halo goes in front of the hard shadow, which stays. */
+  .theme-toggle:focus-visible {
+    box-shadow:
+      0 0 0 2px var(--focus-halo),
+      var(--shadow-sm);
+  }
+  .to-light,
+  .to-dark {
+    align-items: center;
+    gap: 6px;
+  }
+  svg {
+    width: 1.1em;
+    height: 1.1em;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /*
+   * The name of the other theme. These rules mirror the ones that pick the
+   * theme in `tokens.css`: the reader's choice, else the system setting.
+   */
+  .to-light {
+    display: none;
+  }
+  .to-dark {
+    display: inline-flex;
+  }
+  @media (prefers-color-scheme: dark) {
+    :global(:root:not([data-theme='light'])) .to-light {
+      display: inline-flex;
+    }
+    :global(:root:not([data-theme='light'])) .to-dark {
+      display: none;
+    }
+  }
+  :global(:root[data-theme='dark']) .to-light {
+    display: inline-flex;
+  }
+  :global(:root[data-theme='dark']) .to-dark {
+    display: none;
+  }
+
+  .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+</style>

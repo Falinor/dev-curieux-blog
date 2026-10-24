@@ -1,13 +1,11 @@
 /*
  * Color tokens from DESIGN.md, the single source of truth: each is written once
  * as light-dark(« plein soleil », « crépuscule »). The value used follows the
- * inherited `color-scheme`, so a theme is one `color-scheme` switch away.
- * For now the site is « crépuscule » only, the reference design: the light
- * values wait for the themes ticket, which lets `color-scheme` follow the
- * reader's setting and adds the toggle.
+ * inherited `color-scheme`: by default the reader's system setting, unless they
+ * picked a theme with the toggle, which sets `data-theme` on the root.
  */
 :root {
-  color-scheme: dark;
+  color-scheme: light dark;
 
   --paper: light-dark(#fffbf4, #17112e);
   --card: light-dark(#fff6e6, #2a2052);
@@ -45,7 +43,23 @@
   --shadow-lg: 8px 8px 0 var(--edge);
   --shadow-sm: 4px 4px 0 var(--edge);
 
+  /*
+   * Focus ring: `coral` at dusk. By daylight no one color stands out from both
+   * the pale sky and cards and the deep sea, so the `ink` ring goes round a
+   * `paper` halo: one of the two always reaches 3:1.
+   */
+  --focus-ring: light-dark(var(--ink), var(--coral));
+  --focus-halo: light-dark(var(--paper), transparent);
+
   /* Page width and side gutter, shared by the header, the main column and the footer. */
   --page-width: 1120px;
   --gutter: clamp(16px, 4vw, 40px);
+}
+
+/* The reader's explicit choice wins over their system setting. */
+:root[data-theme='light'] {
+  color-scheme: light;
+}
+:root[data-theme='dark'] {
+  color-scheme: dark;
 }
