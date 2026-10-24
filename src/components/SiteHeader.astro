@@ -1,0 +1,160 @@
+---
+import Waves from './Waves.astro';
+
+// The scene at the top of every page: a sunset sky with stars, the sun going
+// down behind drifting waves. Over it, the tilted « Dev curieux » badge, the
+// navigation, and whatever the page puts in its slot (the home page's hero).
+// The scene grows with that content and keeps clear of the waves.
+---
+
+<header class="scene">
+  <div class="decor" aria-hidden="true">
+    <div class="stars"></div>
+    <div class="sun"></div>
+    <Waves />
+  </div>
+  <div class="page">
+    <div class="top">
+      <a class="badge" href="/">
+        Dev <b>curieux</b> <small>blog</small>
+      </a>
+      <nav aria-label="Navigation principale">
+        <ul>
+          <li>
+            <a href="/#posts">Posts</a>
+          </li>
+          <li>
+            <a href="/rss.xml">RSS</a>
+          </li>
+          <li>
+            <a href="https://curieux.dev">
+              curieux.dev<span aria-hidden="true"> ↗</span>
+            </a>
+          </li>
+        </ul>
+      </nav>
+    </div>
+    <slot />
+  </div>
+</header>
+
+<style>
+  .scene {
+    position: relative;
+    /* The wave sliding out of view must never widen the page. */
+    overflow: hidden;
+    min-height: 250px;
+    /* Keeps the content above the waves and the sun. */
+    padding-bottom: 130px;
+    background: linear-gradient(var(--sky-top), var(--sky-bot) 62%, var(--sky-glow));
+    color: var(--ink);
+  }
+  .decor {
+    position: absolute;
+    inset: 0;
+  }
+  /* Drawn, not one element per star; `--star` is transparent by daylight. */
+  .stars {
+    position: absolute;
+    inset: 0 0 35%;
+    background-image:
+      radial-gradient(1.5px 1.5px at 6% 18%, var(--star), transparent),
+      radial-gradient(1px 1px at 13% 42%, var(--star), transparent),
+      radial-gradient(1.5px 1.5px at 21% 9%, var(--star), transparent),
+      radial-gradient(1px 1px at 28% 30%, var(--star), transparent),
+      radial-gradient(2px 2px at 36% 14%, var(--star), transparent),
+      radial-gradient(1px 1px at 44% 48%, var(--star), transparent),
+      radial-gradient(1.5px 1.5px at 51% 24%, var(--star), transparent),
+      radial-gradient(1px 1px at 58% 8%, var(--star), transparent),
+      radial-gradient(2px 2px at 66% 36%, var(--star), transparent),
+      radial-gradient(1px 1px at 72% 16%, var(--star), transparent),
+      radial-gradient(1.5px 1.5px at 79% 44%, var(--star), transparent),
+      radial-gradient(1px 1px at 85% 6%, var(--star), transparent),
+      radial-gradient(2px 2px at 91% 27%, var(--star), transparent),
+      radial-gradient(1px 1px at 97% 12%, var(--star), transparent);
+  }
+  .sun {
+    position: absolute;
+    left: 62%;
+    bottom: 52px;
+    width: 120px;
+    aspect-ratio: 1;
+    border: var(--outline);
+    border-radius: 50%;
+    background: var(--sun);
+    box-shadow: 0 0 80px 20px color-mix(in srgb, var(--sun) 45%, transparent);
+  }
+
+  .page {
+    position: relative;
+  }
+  .top {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding-top: 16px;
+  }
+  .badge {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.3em;
+    padding: 6px 12px;
+    background: var(--card);
+    color: var(--ink);
+    border: var(--outline);
+    box-shadow: var(--shadow-sm);
+    font-family: var(--font-display);
+    font-size: 1.15rem;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    text-decoration: none;
+    transform: rotate(-3deg);
+  }
+  .badge b {
+    color: var(--coral-text);
+  }
+  .badge small {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    font-weight: 500;
+    color: var(--muted);
+  }
+  nav ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  /* Stickers: the tactile primitive at its smallest. */
+  nav a {
+    display: block;
+    padding: 4px 10px;
+    background: var(--sun);
+    color: var(--on-sun);
+    border: var(--outline);
+    box-shadow: var(--shadow-sm);
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-decoration: none;
+  }
+  nav a:hover {
+    text-decoration: underline;
+  }
+
+  @media (max-width: 600px) {
+    .scene {
+      padding-bottom: 150px;
+    }
+    .sun {
+      left: auto;
+      right: 8%;
+      bottom: 46px;
+      width: 84px;
+    }
+  }
+</style>

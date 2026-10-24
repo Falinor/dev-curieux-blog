@@ -1,0 +1,51 @@
+/*
+ * Color tokens from DESIGN.md, the single source of truth: each is written once
+ * as light-dark(« plein soleil », « crépuscule »). The value used follows the
+ * inherited `color-scheme`, so a theme is one `color-scheme` switch away.
+ * For now the site is « crépuscule » only, the reference design: the light
+ * values wait for the themes ticket, which lets `color-scheme` follow the
+ * reader's setting and adds the toggle.
+ */
+:root {
+  color-scheme: dark;
+
+  --paper: light-dark(#fffbf4, #17112e);
+  --card: light-dark(#fff6e6, #2a2052);
+  --ink: light-dark(#1c140c, #ffefdc);
+  --muted: light-dark(#6b5a48, #c4b2d6);
+  --edge: light-dark(#1c140c, #06030d);
+  --rule: light-dark(#eadcc6, #3a2e66);
+  --coral: light-dark(#ff6a45, #ff7a55);
+  --coral-text: light-dark(#b83a1b, #ffa384);
+  --sun: light-dark(#ffc63d, #ffc63d);
+  --on-sun: light-dark(#1c140c, #1c140c);
+  --link: light-dark(#1f5182, #9fd4ff);
+  --sky-top: light-dark(#8fcbff, #241a4b);
+  --sky-bot: light-dark(#eaf6ff, #6a3a6e);
+  --sky-glow: light-dark(#ffe1a8, #e0654f);
+  --sea-1: light-dark(#1f5182, #0b2440);
+  --sea-2: light-dark(#2e6fa8, #123457);
+  --sea-3: light-dark(#5a93c2, #1d4a75);
+  --sea-4: light-dark(#7fb0d6, #2b5f8f);
+  --sea-text: light-dark(#fff6e6, #ffefdc);
+  --star: light-dark(transparent, #fff6e6);
+  --code-bg: light-dark(#0e2f4d, #0d0922);
+  --code-fg: light-dark(#eaf6ff, #f4e8ff);
+  --tk-kw: light-dark(#ff9a7a, #ff9a7a);
+  --tk-str: light-dark(#ffd27a, #ffd27a);
+  --tk-fn: light-dark(#9fd4ff, #9fd4ff);
+  --tk-com: light-dark(#93b2cf, #9d8fbf);
+
+  /*
+   * Tactile primitive: an `edge` outline and a hard offset shadow. Never on
+   * running text.
+   */
+  --outline: 3px solid var(--edge);
+  --shadow: 6px 6px 0 var(--edge);
+  --shadow-lg: 8px 8px 0 var(--edge);
+  --shadow-sm: 4px 4px 0 var(--edge);
+
+  /* Page width and side gutter, shared by the header, the main column and the footer. */
+  --page-width: 1120px;
+  --gutter: clamp(16px, 4vw, 40px);
+}
