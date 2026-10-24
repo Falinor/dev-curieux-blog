@@ -1,0 +1,116 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+// Served for every unknown URL, with a 404 status: by `astro preview`, and by
+// Workers static assets (`not_found_handling: "404-page"` in wrangler.jsonc).
+// A postcard sent back: it overlaps the horizon like a Post's title card.
+---
+
+<BaseLayout title="Page introuvable — Dev curieux">
+  <main class="page">
+    <div class="card">
+      <p class="postmark">N’habite pas à l’adresse indiquée</p>
+      <span class="stamp" aria-hidden="true">
+        404
+      </span>
+      <h1>Cette page a pris le large</h1>
+      <p class="lead">
+        Je ne trouve rien à cette adresse : le lien est peut-être cassé, ou la page a dérivé
+        ailleurs.
+      </p>
+      <a class="home" href="/">
+        Retour à l’accueil
+      </a>
+    </div>
+  </main>
+</BaseLayout>
+
+<style>
+  .card {
+    position: relative;
+    display: grid;
+    grid-template:
+      'postmark stamp' auto
+      'title stamp' auto
+      'lead lead' auto
+      'home home' auto
+      / minmax(0, 1fr) auto;
+    gap: 14px 20px;
+    max-width: 680px;
+    margin: -70px auto 0;
+    padding: clamp(22px, 4vw, 36px);
+    background: var(--card);
+    color: var(--ink);
+    border: var(--outline);
+    box-shadow: var(--shadow-lg);
+    transform: rotate(-1deg);
+  }
+
+  /* The post office's rubber stamp on mail it can't deliver. */
+  .postmark {
+    grid-area: postmark;
+    justify-self: start;
+    margin: 0;
+    padding: 2px 10px;
+    border: 2px solid currentColor;
+    border-radius: 4px;
+    color: var(--coral-text);
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    transform: rotate(-3deg);
+  }
+
+  .stamp {
+    grid-area: stamp;
+    display: grid;
+    place-items: center;
+    width: 72px;
+    height: 80px;
+    background: var(--sun);
+    color: var(--on-sun);
+    outline: 2px dashed var(--edge);
+    outline-offset: -6px;
+    font-family: var(--font-mono);
+    font-size: 1.1rem;
+    font-weight: 700;
+    transform: rotate(4deg);
+  }
+
+  h1 {
+    grid-area: title;
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: clamp(1.9rem, 4.6vw, 3rem);
+    font-weight: 800;
+    line-height: 1.04;
+    letter-spacing: -0.03em;
+  }
+
+  .lead {
+    grid-area: lead;
+    max-width: 52ch;
+    margin: 0;
+    color: var(--muted);
+    font-size: 1.12rem;
+  }
+
+  /* A button: the tactile primitive in coral. */
+  .home {
+    grid-area: home;
+    justify-self: start;
+    margin-top: 8px;
+    padding: 8px 16px;
+    background: var(--coral);
+    color: var(--on-sun);
+    border: var(--outline);
+    box-shadow: var(--shadow-sm);
+    font-weight: 700;
+    text-decoration: none;
+  }
+  .home:hover {
+    text-decoration: underline;
+  }
+</style>
