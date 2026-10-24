@@ -5,16 +5,29 @@ output:
 
 pre-commit:
   parallel: true
-  commands:
-    lint:
+  jobs:
+    - name: lint
       glob: '*.{js,ts,mjs,astro}'
       run: pnpm oxlint {staged_files}
-    lint-astro:
+    - name: lint-astro
       glob: '*.astro'
       run: pnpm eslint {staged_files}
-    format:
-      glob: '*.{js,ts,mjs,astro,css,json,jsonc,md,mdx,yml,yaml}'
-      run: pnpm prettier --write {staged_files} && git add {staged_files}
+    # Piped: a Translation's sourceHash is the fingerprint of the Post as committed, so
+    # translate only after Prettier has rewritten the staged Posts.
+    - name: format-then-translate
+      group:
+        piped: true
+        jobs:
+          - name: format
+            glob: '*.{js,ts,mjs,astro,css,json,jsonc,md,mdx,yml,yaml}'
+            run: pnpm prettier --write {staged_files} && git add {staged_files}
+          # Translates the staged published Posts with Claude Code and stages their
+          # Translations. Never blocks the commit: it only warns when Claude Code is
+          # unavailable, and CI's Translation check catches what is left.
+          - name: translate
+            glob: 'src/content/posts/*.mdx'
+            exclude: '*.en.mdx'
+            run: node src/translation/cli.ts translate --stage {staged_files}
 
 commit-msg:
   commands:
