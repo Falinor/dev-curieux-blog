@@ -1,0 +1,19 @@
+---
+import PostPage from '../../components/PostPage.astro';
+import type { Alternates } from '../../lib/i18n';
+import { getPostPages, type PostView } from '../../lib/posts';
+
+export async function getStaticPaths() {
+  const pages = await getPostPages('en');
+  return pages.map((props) => ({ params: { slug: props.view.post.id }, props }));
+}
+
+interface Props {
+  view: PostView;
+  alternates: Alternates | undefined;
+}
+
+const { view, alternates } = Astro.props;
+---
+
+<PostPage view={view} alternates={alternates} />

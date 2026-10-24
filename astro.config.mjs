@@ -20,6 +20,11 @@ function fontsource(name, cssVariable, file, weight, fallback) {
 
 export default defineConfig({
   site: 'https://blog.curieux.dev',
+  // French at the root, English under `/en/`. Routing generates no page: each
+  // English route is a file under `src/pages/en/`, and there is no fallback, so
+  // an English page never shows French content. `Astro.currentLocale` tells a
+  // page its language.
+  i18n: { defaultLocale: 'fr', locales: ['fr', 'en'], routing: { prefixDefaultLocale: false } },
   integrations: [mdx()],
   markdown: { shikiConfig: { theme: codeTheme } },
   // Images in a Post get a `srcset`, so phones download smaller files.
