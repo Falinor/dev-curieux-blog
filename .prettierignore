@@ -8,3 +8,6 @@ playwright-report/
 # vendored agent skills (installed from skills-lock.json)
 .agents/
 .claude/skills/
+
+# generated Translations (ADR 0002): never hand-edited, so never reformatted
+*.en.mdx

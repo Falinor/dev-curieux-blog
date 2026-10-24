@@ -1,7 +1,10 @@
 {
   "extends": "astro/tsconfigs/strict",
   "compilerOptions": {
-    "types": ["node"]
+    "types": ["node"],
+    // The Translation module runs as TypeScript under plain Node, which only strips
+    // erasable syntax: reject enums, namespaces and parameter properties.
+    "erasableSyntaxOnly": true
   },
   "include": [".astro/types.d.ts", "**/*"],
   "exclude": ["dist", "dist-e2e"]
