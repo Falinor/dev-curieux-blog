@@ -16,7 +16,11 @@ const [before, highlight, after] = text.heading;
 const { featured, others } = homeLayout(await getPostsIn(locale));
 ---
 
-<BaseLayout title={text.title} alternates={{ fr: homePath('fr'), en: homePath('en') }}>
+<BaseLayout
+  title={text.title}
+  description={text.description}
+  alternates={{ fr: homePath('fr'), en: homePath('en') }}
+>
   <div class="hero" slot="hero">
     <h1>
       {before}

@@ -1,8 +1,8 @@
 ---
 import { render } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
-import type { Alternates } from '../lib/i18n';
-import type { PostView } from '../lib/posts';
+import { type Alternates, postPath, socialImagePath } from '../lib/i18n';
+import { getPostTags, type PostView } from '../lib/posts';
 import PostArticle from './PostArticle.astro';
 
 // A Post's page: `/<slug>/` in French, `/en/<slug>/` for its Translation.
@@ -13,10 +13,24 @@ interface Props {
 }
 
 const { view, alternates } = Astro.props;
-const { Content } = await render(view.text);
+const { locale, post, text } = view;
+const { title, description } = text.data;
+const article = {
+  headline: title,
+  publishedAt: post.data.publishedAt,
+  updatedAt: post.data.updatedAt,
+  tags: (await getPostTags(post)).map((tag) => tag.data[locale]),
+};
+const { Content } = await render(text);
 ---
 
-<BaseLayout title={view.text.data.title} alternates={alternates}>
+<BaseLayout
+  title={`${title} — Dev curieux`}
+  description={description}
+  alternates={alternates}
+  image={socialImagePath(postPath(locale, post.id))}
+  article={article}
+>
   <main class="page">
     <PostArticle view={view}>
       <Content />

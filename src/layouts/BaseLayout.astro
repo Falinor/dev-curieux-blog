@@ -1,30 +1,24 @@
 ---
 import { Font } from 'astro:assets';
 import Analytics from '../components/Analytics.astro';
+import Seo, { type Props as SeoProps } from '../components/Seo.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 import SiteHeader from '../components/SiteHeader.astro';
 import ThemeScript from '../components/ThemeScript.astro';
-import { type Alternates, homePath, otherLocale, pageLocale } from '../lib/i18n';
+import { homePath, otherLocale, pageLocale } from '../lib/i18n';
 import '../styles/global.css';
 
-interface Props {
-  title: string;
-  /** The page's path in both languages, when it exists in both. */
-  alternates?: Alternates | undefined;
-}
+// Every page's frame. The page names itself to search engines through the
+// `Seo` props: title, description, and its path in both languages when it
+// exists in both (`alternates`).
+type Props = SeoProps;
 
-const { title, alternates } = Astro.props;
+const { alternates } = Astro.props;
 const locale = pageLocale(Astro.currentLocale);
 // The same page in the other language, or that language's home page when the
 // page has no counterpart (a Post without a Translation, the 404 page).
 const other = otherLocale(locale);
 const counterpart = alternates?.[other] ?? homePath(other);
-// For search engines: both versions, with French, the original, as the default.
-const hreflangs = alternates
-  ? Object.entries({ fr: alternates.fr, en: alternates.en, 'x-default': alternates.fr }).map(
-      ([hreflang, path]) => ({ hreflang, href: new URL(path, Astro.site).href }),
-    )
-  : [];
 ---
 
 <!doctype html>
@@ -33,10 +27,7 @@ const hreflangs = alternates
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <ThemeScript />
-    <title>{title}</title>
-    {hreflangs.map(({ hreflang, href }) => (
-      <link rel="alternate" hreflang={hreflang} href={href} />
-    ))}
+    <Seo {...Astro.props} />
     <Font cssVariable="--font-display" preload />
     <Font cssVariable="--font-body" preload />
     <Font cssVariable="--font-mono" preload />

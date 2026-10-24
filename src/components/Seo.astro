@@ -1,0 +1,134 @@
+---
+import {
+  type Alternates,
+  feedPath,
+  homePath,
+  type Locale,
+  otherLocale,
+  pageLocale,
+  socialImagePath,
+  ui,
+} from '../lib/i18n';
+
+// What search engines, link previews and feed readers read in a page's head:
+// its title and description, its canonical URL on blog.curieux.dev, its
+// other-language version, the Open Graph and Twitter card tags of its preview,
+// and the RSS feed of its language.
+
+/** A Post page: the Post as link previews describe it. */
+export interface Article {
+  /** The title of the Post (or of its Translation), without the site's name. */
+  headline: string;
+  publishedAt: Date;
+  updatedAt?: Date | undefined;
+  /** Its Tags' labels, in the page's language. */
+  tags: string[];
+}
+
+export interface Props {
+  /** The document title: unique to the page. */
+  title: string;
+  description: string;
+  /** The page's path in both languages, when it exists in both. */
+  alternates?: Alternates | undefined;
+  /**
+   * The path of the page's social image (`socialImagePath()`). By default, its
+   * language's home page image.
+   */
+  image?: string | undefined;
+  article?: Article | undefined;
+  /** Keep the page out of search engines (the 404 page): no canonical URL, no preview. */
+  noindex?: boolean | undefined;
+}
+
+const locale = pageLocale(Astro.currentLocale);
+const {
+  title,
+  description,
+  alternates,
+  image = socialImagePath(homePath(locale)),
+  article,
+  noindex = false,
+} = Astro.props;
+// Absolute on `site`, so they name blog.curieux.dev wherever the build is
+// served (`astro preview`, a pull request's preview deployment).
+const absolute = (path: string) => new URL(path, Astro.site).href;
+const canonical = absolute(Astro.url.pathname);
+const imageUrl = absolute(image);
+// Both versions, with French, the original, as the default.
+const hreflangs = alternates
+  ? Object.entries({ fr: alternates.fr, en: alternates.en, 'x-default': alternates.fr }).map(
+      ([hreflang, path]) => ({ hreflang, href: absolute(path) }),
+    )
+  : [];
+// English as en-GB, like the dates.
+const ogLocales: Record<Locale, string> = { fr: 'fr_FR', en: 'en_GB' };
+const otherLocales = alternates ? [otherLocale(locale)] : [];
+// For search engines: a Post page is a BlogPosting, and a Translation says
+// which French Post it translates.
+const blogPosting = article && {
+  '@context': 'https://schema.org',
+  '@type': 'BlogPosting',
+  headline: article.headline,
+  description,
+  inLanguage: locale,
+  datePublished: article.publishedAt.toISOString(),
+  dateModified: (article.updatedAt ?? article.publishedAt).toISOString(),
+  url: canonical,
+  mainEntityOfPage: canonical,
+  image: imageUrl,
+  keywords: article.tags,
+  author: { '@type': 'Person', name: 'Dev curieux', url: 'https://curieux.dev' },
+  ...(locale !== 'fr' && alternates && { translationOfWork: { '@id': absolute(alternates.fr) } }),
+};
+---
+
+<title>{title}</title>
+<meta name="description" content={description} />
+{noindex ? <meta name="robots" content="noindex" /> : <link rel="canonical" href={canonical} />}
+{hreflangs.map(({ hreflang, href }) => (
+  <link rel="alternate" hreflang={hreflang} href={href} />
+))}
+<link
+  rel="alternate"
+  type="application/rss+xml"
+  title={ui[locale].home.title}
+  href={feedPath(locale)}
+/>
+{!noindex && (
+  <>
+    <meta property="og:type" content={article ? 'article' : 'website'} />
+    <meta property="og:site_name" content="Dev curieux" />
+    <meta property="og:title" content={article?.headline ?? title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:locale" content={ogLocales[locale]} />
+    {otherLocales.map((other) => (
+      <meta property="og:locale:alternate" content={ogLocales[other]} />
+    ))}
+    <meta property="og:image" content={imageUrl} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:alt" content={article?.headline ?? title} />
+    {article && (
+      <>
+        <meta property="article:published_time" content={article.publishedAt.toISOString()} />
+        {article.updatedAt && (
+          <meta property="article:modified_time" content={article.updatedAt.toISOString()} />
+        )}
+        {article.tags.map((tag) => (
+          <meta property="article:tag" content={tag} />
+        ))}
+      </>
+    )}
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content={imageUrl} />
+    {blogPosting && (
+      <script
+        type="application/ld+json"
+        set:html={JSON.stringify(blogPosting).replaceAll('<', String.raw`\u003c`)}
+      />
+    )}
+  </>
+)}

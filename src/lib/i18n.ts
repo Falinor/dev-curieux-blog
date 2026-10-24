@@ -37,6 +37,15 @@ export function feedPath(locale: Locale): string {
 }
 
 /**
+ * A page's social image, the 1200×630 PNG link previews show: next to the page,
+ * `<page path>og.png` (`/premier-post/og.png`, `/en/og.png`). Post pages have
+ * their own; every other page shows its language's home page image.
+ */
+export function socialImagePath(pagePath: string): string {
+  return `${pagePath}og.png`;
+}
+
+/**
  * The paths of one page in both languages, when it exists in both: a Post
  * with a Translation, a home page, a Tag page. A page with no counterpart (a
  * Post without a Translation, the 404 page) has none.
@@ -56,6 +65,9 @@ export const ui = {
     },
     home: {
       title: 'Dev curieux — le blog',
+      /** The home page's and the feed's description, for search engines and feed readers. */
+      description:
+        'Le blog de Dev curieux, développeur fullstack freelance : ce que je construis, ce que j’apprends, et pourquoi.',
       // The highlighted word names the blog.
       heading: ['Cartes postales d’un dev ', 'curieux', ''],
       bio: 'Développeur fullstack freelance. Je construis, j’apprends, et j’écris ce que je découvre.',
@@ -70,6 +82,11 @@ export const ui = {
       prompt: 'Une remarque, une erreur, une idée ? Écrivez-moi.',
     },
     noPosts: 'Aucun Post pour l’instant.',
+    tag: {
+      title: (label: string) => `Posts sur ${label} — Dev curieux`,
+      description: (label: string) =>
+        `Tous les Posts de Dev curieux sur ${label}, du plus récent au plus ancien.`,
+    },
     legalNotice: 'Mentions légales',
     privacy: 'Confidentialité',
     tagline: 'codé au rythme des marées',
@@ -83,6 +100,8 @@ export const ui = {
     },
     home: {
       title: 'Dev curieux — the blog',
+      description:
+        'The blog of Dev curieux, a freelance fullstack developer: what I build, what I learn, and why.',
       heading: ['Postcards from a ', 'curious', ' dev'],
       bio: 'Freelance fullstack developer. I build, I learn, and I write down what I find.',
       posts: 'Latest news',
@@ -101,6 +120,10 @@ export const ui = {
       prompt: 'A remark, a mistake, an idea? Write to me.',
     },
     noPosts: 'No posts yet.',
+    tag: {
+      title: (label: string) => `Posts about ${label} — Dev curieux`,
+      description: (label: string) => `Every post by Dev curieux about ${label}, newest first.`,
+    },
     legalNotice: 'Legal notice',
     privacy: 'Privacy',
     tagline: 'coded to the rhythm of the tides',
