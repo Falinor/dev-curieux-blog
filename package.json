@@ -15,7 +15,9 @@
     "lint:fix": "oxlint --fix && eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "test:unit": "node --test 'src/translation/**/*.test.ts'",
+    "translations:check": "node src/translation/cli.ts check"
   },
   "dependencies": {
     "@astrojs/mdx": "8.1.0",
@@ -37,6 +39,7 @@
     "prettier": "3.9.10",
     "prettier-plugin-astro": "1.1.1",
     "typescript": "6.0.3",
-    "wrangler": "4.151.1"
+    "wrangler": "4.151.1",
+    "yaml": "2.9.1"
   }
 }
