@@ -1,0 +1,159 @@
+---
+import { formatDate, isoDate } from '../lib/dates';
+import { getPostTags, readingMinutes, type Post } from '../lib/posts';
+
+interface Props {
+  post: Post;
+  /** A featured postcard spans the whole grid, with a bigger title. */
+  featured?: boolean;
+}
+
+const { post, featured = false } = Astro.props;
+const { title, description, publishedAt } = post.data;
+const tags = await getPostTags(post);
+---
+
+<li class:list={['postcard', { featured }]}>
+  <h3>
+    <a href={`/${post.id}/`}>{title}</a>
+  </h3>
+  <p class="description">{description}</p>
+  <p class="postmark">
+    <time datetime={isoDate(publishedAt)}>{formatDate(publishedAt)}</time>
+    <span>{readingMinutes(post.body)} min de lecture</span>
+    <span>{tags.map((tag) => `#${tag.data.fr}`).join(' ')}</span>
+  </p>
+  {/* The first Tag, already read in the postmark. */}
+  <span class="stamp" aria-hidden="true">
+    {tags[0].data.fr}
+  </span>
+</li>
+
+<style>
+  /* The stamp sits in the top right corner, beside the title and description. */
+  .postcard {
+    position: relative;
+    display: grid;
+    grid-template:
+      'title stamp' auto
+      'description stamp' 1fr
+      'postmark postmark' auto
+      / minmax(0, 1fr) auto;
+    gap: 10px 16px;
+    min-width: 0;
+    padding: 22px 22px 18px;
+    background: var(--card);
+    color: var(--ink);
+    border: var(--outline);
+    box-shadow: var(--shadow);
+    transform: rotate(var(--tilt));
+  }
+  /* Tilts stay within -1.2° and +0.9° (DESIGN.md). */
+  .postcard:nth-child(3n + 1) {
+    --tilt: -1.2deg;
+  }
+  .postcard:nth-child(3n + 2) {
+    --tilt: 0.9deg;
+  }
+  .postcard:nth-child(3n) {
+    --tilt: -0.4deg;
+  }
+  .featured {
+    grid-column: 1 / -1;
+    padding: 30px;
+  }
+
+  h3 {
+    grid-area: title;
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: 1.35rem;
+    font-weight: 800;
+    line-height: 1.12;
+    letter-spacing: -0.015em;
+  }
+  .featured h3 {
+    max-width: 22ch;
+    font-size: clamp(1.7rem, 3.4vw, 2.4rem);
+  }
+  h3 a {
+    color: inherit;
+    text-decoration: none;
+  }
+  /* The whole postcard is the link's hit area. */
+  h3 a::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+  }
+  .postcard:hover h3 a {
+    text-decoration: underline;
+    text-decoration-color: var(--coral);
+    text-decoration-thickness: 3px;
+  }
+  /* The focus ring goes round the postcard, the link's hit area. */
+  h3 a:focus-visible {
+    outline: none;
+  }
+  .postcard:focus-within {
+    outline: 3px solid var(--coral);
+    outline-offset: 4px;
+  }
+
+  p {
+    margin: 0;
+    color: var(--muted);
+  }
+  .description {
+    grid-area: description;
+  }
+  .postmark {
+    grid-area: postmark;
+    align-self: end;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 12px;
+    padding-top: 8px;
+    border-top: 2px dotted var(--rule);
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+  }
+
+  .stamp {
+    grid-area: stamp;
+    display: grid;
+    place-items: center;
+    width: 72px;
+    height: 80px;
+    margin: -6px -6px 0 0;
+    padding: 7px;
+    background: var(--sun);
+    color: var(--on-sun);
+    outline: 2px dashed var(--edge);
+    outline-offset: -6px;
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    font-weight: 600;
+    line-height: 1.15;
+    text-align: center;
+    hyphens: auto;
+    overflow-wrap: break-word;
+    transform: rotate(4deg);
+  }
+
+  /*
+   * On hover a postcard straightens and lifts, unless the reader asked for less
+   * motion: then the underlined title is the only cue.
+   */
+  @media (prefers-reduced-motion: no-preference) {
+    .postcard {
+      transition:
+        transform 0.25s cubic-bezier(0.3, 1.6, 0.5, 1),
+        box-shadow 0.2s;
+    }
+    .postcard:hover {
+      transform: rotate(0) translateY(-4px);
+      box-shadow: 9px 9px 0 var(--edge);
+    }
+  }
+</style>
