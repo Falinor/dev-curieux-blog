@@ -2,8 +2,8 @@ import { test, expect } from '@playwright/test';
 
 test.use({ colorScheme: 'dark' });
 
-// The header and footer are the same on every page.
-const pages = ['/', '/premier-post/', '/tags/astro/'];
+// The header and footer are the same on every page, the 404 page included.
+const pages = ['/', '/premier-post/', '/tags/astro/', '/page-inconnue/'];
 
 for (const path of pages) {
   test(`the header of ${path} links home from the badge, and to the Posts, the RSS feed and curieux.dev`, async ({

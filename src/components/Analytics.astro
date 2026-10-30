@@ -1,0 +1,18 @@
+---
+import { CF_BEACON_TOKEN, WORKERS_CI_BRANCH } from 'astro:env/server';
+
+// Cloudflare Web Analytics: cookieless page views. The beacon is only on the
+// pages of a build that has a token, so local builds don't count; nor do the
+// preview builds of other branches than `main`, even if they get the token.
+const preview = !!WORKERS_CI_BRANCH && WORKERS_CI_BRANCH !== 'main';
+const token = preview ? undefined : CF_BEACON_TOKEN;
+---
+
+{token && (
+  <script
+    is:inline
+    defer
+    src="https://static.cloudflareinsights.com/beacon.min.js"
+    data-cf-beacon={JSON.stringify({ token })}
+  />
+)}
